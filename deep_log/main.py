@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 import argparse
+import fnmatch
+import json
 import logging
 import os
 import re
-import sys
 import time
-import json
 from collections import OrderedDict
-import optparse
-import fnmatch
-import pkg_resources
-import shutil
 # back pressure
 # https://pyformat.info/
 from datetime import datetime
@@ -38,6 +34,13 @@ class LogParser:
     def parse_line(self, line):
         pass
 
+class LogFilter:
+    def filter(self, one_log_item):
+        return True
+
+class LogHandler:
+    def handle(self, one_log_item):
+        return one_log_item
 
 class DefaultLogParser(LogParser):
     def __init__(self, *args, **kwargs):
@@ -91,14 +94,17 @@ class DefaultLogParser(LogParser):
         return result
 
 
-class LogFilter:
-    def filter(self):
-        pass
+class DefaultLogFilter(LogFilter):
+    def filter(self, one_log_item):
+        return True
 
+class DefaultLogHandler(LogHandler):
+    def handle(self, one_log_item):
+        return one_log_item
 
 class FileInfoFilter:
-    def __init__(self, filter):
-        self.filter = filter
+    def __init__(self, file_filter):
+        self.file_filter = file_filter
 
     def get_fileinfo(self, filename):
         if os.path.exists(filename):
@@ -124,7 +130,10 @@ class FileInfoFilter:
             }
 
     def filter(self, filename):
-        return eval(self.filter(), {**self.get_fileinfo(filename), **built_function})
+        if self.file_filter:
+            return eval(self.file_filter, {**self.get_fileinfo(filename), **built_function})
+        else:
+            return True
 
 
 class LogHandler:
@@ -227,35 +236,43 @@ class LogMiner:
     def _parse_file(self, fp):
         file_name = fp.name
         node = self.tree.find(file_name, accept=lambda x: 'parser' in x)
-        node_parser = node.get('parser')
-        parser_name = node_parser.get('name')
-        parser_params = node_parser.get('params')
-        parser = globals()[parser_name](**parser_params)
-        return parser.parse_file(fp)
+        if node is not None and node.get('parser'):
+            node_parser = node.get('parser')
+            parser_name = node_parser.get('name')
+            parser_params = node_parser.get('params')
+            parser = globals()[parser_name](**parser_params)
+            return parser.parse_file(fp)
+        else:
+            return DefaultLogParser().parse_file(fp)
 
     def _handle_file(self, fp, parsed_results):
         file_name = fp.name
         node = self.tree.find(file_name, accept=lambda x: 'handlers' in x)
-        node_handlers = node.get('handlers')
-        for one_node_handler in node_handlers:
-            handler_name = one_node_handler.get('name')
-            handler_params = one_node_handler.get('params')
-            handler = globals()[handler_name](**handler_params)
-            parsed_results = [handler.handle(one) for one in parsed_results]
+
+        if node is not None and node.get('handlers'):
+            node_handlers = node.get('handlers')
+            for one_node_handler in node_handlers:
+                handler_name = one_node_handler.get('name')
+                handler_params = one_node_handler.get('params')
+                handler = globals()[handler_name](**handler_params)
+                parsed_results = [handler.handle(one) for one in parsed_results]
 
         return parsed_results
 
     def _filter_file(self, fp, parsed_results):
         file_name = fp.name
         node = self.tree.find(file_name, accept=lambda x: 'filters' in x)
-        node_filters = node.get('handlers')
-        for one_node_filters in node_filters:
-            filter_name = one_node_filters.get('name')
-            filter_params = one_node_filters.get('params')
-            filter = globals()[filter_name](**filter_params)
-            parsed_results = [one for one in parsed_results if filter.filter(one)]
+        if node is not None and node.get('filters'):
+            node_filters = node.get('filters')
+            for one_node_filters in node_filters:
+                filter_name = one_node_filters.get('name')
+                filter_params = one_node_filters.get('params')
+                filter = globals()[filter_name](**filter_params)
+                parsed_results = [one for one in parsed_results if filter.filter(one)]
 
-        return parsed_results
+            return parsed_results
+        else:
+            return parsed_results
 
     def mine_file(self, fp):
         parsed_results = self._parse_file(fp)
@@ -295,6 +312,10 @@ class LogMiner:
             return True
 
         node_file_filters = node.get('file_filters')
+
+        if node_file_filters is None:
+            return True
+
         for one_node_file_filter in node_file_filters:
             file_filter_name = one_node_file_filter.get('name')
             file_filter_params = one_node_file_filter.get('params')
@@ -326,25 +347,36 @@ class LogMiner:
             for one in full_paths:
                 try:
                     fp = open(one)
-                    opened_file_list.append((fp, one))
+                    opened_file_list.append(fp)
                 except:
                     pass
 
             for one in self.mine_files(opened_file_list):
                 yield one
 
+
 def make_directory(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
 
-def get_settings_file(self, custom_settings=None):
-    config_dir = "~/.deep_log"
+def get_settings_file(custom_settings=None):
+    config_dir = path.expanduser("~/.deep_log")
     if custom_settings is None:
         make_directory(config_dir)
 
-        if not os.path.exists(os.path.join(config_dir, "settings.json")):
-            shutil.copy(pkg_resources.resource_filename('deep_log.config.settings.json', 'settings.json'), config_dir)    
+        default_settings_json = os.path.join(config_dir, "settings.json")
+        if not os.path.exists(default_settings_json):
+            default_settings = {
+                "common": {
+
+                },
+                "loggers": {
+                    "root": {}
+                }
+            }
+            with open(default_settings_json, "w") as f:
+                json.dump(default_settings, f)
         return os.path.join(config_dir, "settings.json")
     return custom_settings
 
@@ -360,9 +392,6 @@ def main():
     parser.add_argument('dirs', metavar='N', nargs='+', help='log dirs to analyze')
 
     args = parser.parse_args()
- 
-
-
 
     log_miner = LogMiner(get_settings_file(args.file))
     format = "{raw}" if not args.format else args.format
@@ -375,6 +404,6 @@ def main():
 
         print(format.format(**{**default_value, **item}))
 
+
 if __name__ == '__main__':
     main()
-1
