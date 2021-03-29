@@ -1,0 +1,38 @@
+{
+    "common": {
+  
+    },
+    "loggers": {
+      "root": {
+        "path": "/",
+        "file_filters": [
+          
+        ],
+        "files": {
+          "includes": [],
+          "excludes": []
+        },
+        "filters": [
+          {
+            "name": "DefaultFilter",
+            "params": {
+            }
+          }
+        ],
+        "handlers": [
+          {
+            "name": "DefaultHandler",
+            "params": {
+            }
+          }
+        ],
+        "parser": {
+          "name": "DefaultLogParser",
+          "params": {
+            "pattern": "(?P<content>.*)"
+          }
+        }
+      }
+      
+    }
+  }
