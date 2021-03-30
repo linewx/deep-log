@@ -13,6 +13,12 @@ from datetime import datetime
 from os import path
 from string import Formatter
 
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                    datefmt='%m-%d %H:%M',
+                    filename='/tmp/deep_log.log',
+                    filemode='w')
+
 built_function = {
     'datetime': datetime,  # datetime function
     'path': path,  # datetime function
@@ -34,13 +40,16 @@ class LogParser:
     def parse_line(self, line):
         pass
 
+
 class LogFilter:
     def filter(self, one_log_item):
         return True
 
+
 class LogHandler:
     def handle(self, one_log_item):
         return one_log_item
+
 
 class DefaultLogParser(LogParser):
     def __init__(self, *args, **kwargs):
@@ -98,9 +107,69 @@ class DefaultLogFilter(LogFilter):
     def filter(self, one_log_item):
         return True
 
+
 class DefaultLogHandler(LogHandler):
     def handle(self, one_log_item):
         return one_log_item
+
+
+class TypeLogHandler(LogHandler):
+    def __init__(self, definitions):
+        self.type_definitions = definitions
+
+    def handle(self, one_log_item):
+        for one_definition in self.type_definitions:
+            type_name = one_definition['type']
+            field_name = one_definition['field']
+            default_value = None
+            if default_value in one_definition:
+                default_value = one_definition['default']
+            if field_name in one_log_item:
+                try:
+                    if type_name == 'datetime':
+                        time_format = one_definition['format']
+                        converted_value = datetime.strptime(one_log_item[field_name], time_format)
+                        one_log_item[field_name] = converted_value
+
+                    if type_name == 'int':
+                        original_value = one_definition[field_name]
+                        if original_value.isdigit():
+                            one_log_item[field_name] = int(original_value)
+                        else:
+                            one_log_item[field_name] = default_value
+
+                    if type_name == 'float':
+                        original_value = one_definition[field_name]
+                        if original_value.isdigit():
+                            one_log_item[field_name] = float(original_value)
+                        else:
+                            one_log_item[field_name] = default_value
+
+                    return one_log_item
+                except Exception as e:
+                    logging.error("error to transfer {} in {}, use default value {}".format(str(one_log_item),
+                                                                                            str(one_definition),
+                                                                                            str(default_value)))
+                    one_log_item[field_name] = default_value
+                    return one_log_item
+
+
+class FileNameFilter:
+    def __init__(self, filters):
+        if filters:
+            self.filters = filters.split(',')
+        else:
+            self.filters = None
+
+    def filter(self, file_name):
+        if self.filters:
+            for one in self.filters:
+                if fnmatch.fnmatch(file_name.lower(), one):
+                    return True
+            return False
+        else:
+            return True
+
 
 class FileInfoFilter:
     def __init__(self, file_filter):
@@ -386,9 +455,13 @@ def main():
     parser.add_argument('-f', '--file', help='config file')
     parser.add_argument('-l', '--filter', help='log filter')
     parser.add_argument('-t', '--file-filter', help='file filters')
-    parser.add_argument('-o', '--layout', help='return layout ')
+    parser.add_argument('-n', '--file-name', help='file name filters')
+    parser.add_argument('-u', '--layout', help='return layout ')
     parser.add_argument('-m', '--format', help='print format ')
     parser.add_argument('-s', '--subscribe', action='store_true', help='subscribe mode')
+    parser.add_argument('-o', '--order-by', help='field to order by')
+    parser.add_argument('-r', '--reverse', action='store_true', help='reverse order, only work with order by')
+    parser.add_argument('--limit', type=int, help='limit query count')
     parser.add_argument('dirs', metavar='N', nargs='+', help='log dirs to analyze')
 
     args = parser.parse_args()
@@ -397,12 +470,29 @@ def main():
     format = "{raw}" if not args.format else args.format
     default_value = gen_default_values(format)
 
-    for item in log_miner.mining(args.dirs, [FileInfoFilter(args.file_filter)], [], args.subscribe):
+    items = []
+
+    count = 0
+    for item in log_miner.mining(args.dirs, [FileNameFilter(args.file_name), FileInfoFilter(args.file_filter)], [],
+                                 args.subscribe):
         if args.filter:
             if not eval(args.filter, {**built_function, **item}):
                 continue
+        if args.subscribe or not args.order_by:
+            # not subscribe mode or not order by mode, print out immediately
+            print(format.format(**{**default_value, **item}))
+        else:
+            # only for order by
+            items.append(item)
 
-        print(format.format(**{**default_value, **item}))
+        count = count + 1
+        if args.limit is not None and count >= args.limit:
+            break
+
+    items.sort(key=lambda x: x.get(args.order_by), reverse=args.reverse)
+
+    for one in items:
+        print(format.format(**{**default_value, **one}))
 
 
 if __name__ == '__main__':
