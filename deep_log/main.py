@@ -7,6 +7,7 @@ import os
 import re
 import time
 from collections import OrderedDict
+import glob
 # back pressure
 # https://pyformat.info/
 from datetime import datetime
@@ -166,7 +167,8 @@ class TagLogHandler(LogHandler):
     def handle(self, one_log_item):
         tags = one_log_item.get('tags') if 'tags' in one_log_item else set()
         for one_definition in self.tag_definitions:
-            name, condition = one_definition
+            name = one_definition.get('name')
+            condition = one_definition.get('condition')
             if name in tags:
                 # already tagged
                 continue
@@ -456,9 +458,19 @@ class DeepLog:
 
         return True
 
-    def mining(self, dirs, file_filters=None, pre_content_filters=None, subscribe=False):
+    def mining(self, target_dirs, file_filters=None, pre_content_filters=None, subscribe=False):
         full_paths = []
+
+        dirs = []
+        for one_target_dir in target_dirs:
+            dirs.extend(glob.glob(one_target_dir))
+
         for folder in dirs:
+
+            if path.isfile(folder):
+                full_paths.append(folder)
+                continue
+
             for root, dirs, files in os.walk(folder):
                 for file in files:
                     full_paths.append(os.path.join(root, file))
@@ -540,6 +552,10 @@ def build_recent_filter(recent):
     start_time = datetime.now().timestamp() - recent_seconds
     return file_filter_template.format(start_time)
 
+def build_tags_filter(tags):
+    target_tags = set(tags.split(','))
+    return 'tags & {}'.format(str(target_tags))
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -554,6 +570,7 @@ def main():
     parser.add_argument('-r', '--reverse', action='store_true', help='reverse order, only work with order by')
     parser.add_argument('--limit', type=int, help='limit query count')
     parser.add_argument('--recent', help='query to recent time')
+    parser.add_argument('--tags', help='query by tags')
     parser.add_argument('dirs', metavar='N', nargs='+', help='log dirs to analyze')
 
     args = parser.parse_args()
@@ -583,6 +600,10 @@ def main():
 
     if args.recent:
         post_filters.append(build_recent_filter(args.recent))
+
+    if args.tags:
+        post_filters.append(build_tags_filter(args.tags))
+
 
     for item in log_miner.mining(args.dirs, file_filters, [],
                                  args.subscribe):
