@@ -393,6 +393,15 @@ class DeepLog:
                     the_node = TrieNode(the_path, one_logger)
                     self.tree.insert(the_path, one_logger)
 
+    def get_all_paths(self):
+        paths = []
+        loggers = self.settings.get('loggers')
+        for one_logger in loggers:
+            if one_logger is not None and 'path' in one_logger:
+                the_path = one_logger.get('path')
+                the_path = the_path.format(**self.settings.get('variables'))
+                paths.append(the_path)
+
     def get_settings_file(self, custom_settings=None):
         config_dir = path.expanduser("~/.deep_log")
         if custom_settings is None:
@@ -516,12 +525,18 @@ class DeepLog:
 
         return True
 
+    def normalize_path(self, dir):
+        dir = path.expanduser(dir)
+        dir = path.expandvars(dir)
+        dir = path.abspath(dir)
+        return glob.glob(dir)
+
     def mining(self, target_dirs, file_filters=None, pre_content_filters=None, subscribe=False):
         full_paths = []
 
         dirs = []
         for one_target_dir in target_dirs:
-            dirs.extend(glob.glob(one_target_dir))
+            dirs.extend(self.normalize_path(one_target_dir))
 
         for folder in dirs:
 
@@ -631,7 +646,7 @@ def main():
     parser.add_argument('--recent', help='query to recent time')
     parser.add_argument('--tags', help='query by tags')
     parser.add_argument('-D', action='append', dest='variables', help='definitions')
-    parser.add_argument('dirs', metavar='N', nargs='+', help='log dirs to analyze')
+    parser.add_argument('dirs', metavar='N', nargs='*', help='log dirs to analyze')
 
     args = parser.parse_args()
 
@@ -668,7 +683,11 @@ def main():
     if args.tags:
         post_filters.append(build_tags_filter(args.tags))
 
-    for item in log_miner.mining(args.dirs, file_filters, [],
+    the_dirs = args.dirs
+    if not the_dirs:
+        the_dirs = log_miner.get_all_paths()
+
+    for item in log_miner.mining(the_dirs, file_filters, [],
                                  args.subscribe):
 
         for one_post_filters in post_filters:
