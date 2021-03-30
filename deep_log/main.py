@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import fnmatch
+import functools
 import json
 import logging
 import os
@@ -10,9 +11,14 @@ from collections import OrderedDict
 import glob
 # back pressure
 # https://pyformat.info/
+from copy import copy
 from datetime import datetime
 from os import path
 from string import Formatter
+
+'''
+
+'''
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
@@ -29,7 +35,7 @@ built_function = {
 
 def gen_default_values(format_string):
     format_keys = [i[1] for i in Formatter().parse(format_string) if i[1] is not None]
-    return {one: '' for one in format_keys}
+    return {one: '' for one in format_keys if one}
 
 
 class LogParser:
@@ -81,12 +87,15 @@ class DefaultLogParser(LogParser):
                     # affinity to last item
                     current_item['raw'] = current_item['raw'] + line
                     current_item['content'] = current_item['content'] + line
+                    # current_item.update(get_fileinfo(file.name))
             else:
                 # matched pattern
                 # flush current item first
                 if current_item:
                     items.append(current_item)
                 current_item = {'line_number': file.tell(), **result}
+                current_item.update({'tags': set()})
+                current_item.update(get_fileinfo(file.name))
 
     def parse_line(self, one_line):
         # {'raw': '', 'content': 'content'}
@@ -134,26 +143,44 @@ class TypeLogHandler(LogHandler):
                         one_log_item[field_name] = converted_value
 
                     if type_name == 'int':
-                        original_value = one_definition[field_name]
+                        original_value = one_log_item[field_name]
                         if original_value.isdigit():
                             one_log_item[field_name] = int(original_value)
                         else:
                             one_log_item[field_name] = default_value
 
                     if type_name == 'float':
-                        original_value = one_definition[field_name]
+                        original_value = one_log_item[field_name]
                         if original_value.isdigit():
                             one_log_item[field_name] = float(original_value)
                         else:
                             one_log_item[field_name] = default_value
 
-                    return one_log_item
                 except Exception as e:
                     logging.error("error to transfer {} in {}, use default value {}".format(str(one_log_item),
                                                                                             str(one_definition),
                                                                                             str(default_value)))
                     one_log_item[field_name] = default_value
-                    return one_log_item
+        return one_log_item
+
+
+class StripLogHandler(LogHandler):
+    def handle(self, one_log_item):
+        return {key: (value.strip() if isinstance(value, str) else value) for key, value in one_log_item.items()}
+
+
+class TransformLogHandler(LogHandler):
+    def __init__(self, definitions):
+        self.definitions = definitions
+
+    def handle(self, one_log_item):
+        new_one_log_item = copy(one_log_item)
+        for one_definition in self.definitions:
+            name = one_definition.get('name')
+            value = one_definition.get('value')
+            new_one_log_item[name] = eval(value, one_log_item)
+
+        return new_one_log_item
 
 
 class TagLogHandler(LogHandler):
@@ -198,6 +225,31 @@ class FileNameFilter:
             return False
         else:
             return True
+
+
+@functools.lru_cache(maxsize=256, typed=True)
+def get_fileinfo(filename):
+    if os.path.exists(filename):
+        return {
+            'name': filename,
+            'writable': os.access(filename, os.W_OK),
+            'readable': os.access(filename, os.R_OK),
+            'executable': os.access(filename, os.X_OK),
+            'ctime': datetime.fromtimestamp(path.getctime(filename)),
+            'mtime': datetime.fromtimestamp(path.getmtime(filename)),
+            'actime': datetime.fromtimestamp(path.getatime(filename)),
+            'size': path.getsize(filename),
+            'basename': path.basename(filename),
+            'isdir': path.isdir(filename),
+            'isfile': path.isfile(filename),
+            'exists': True,
+        }
+
+    else:
+        return {
+            'name': filename,
+            'exists': False
+        }
 
 
 class FileInfoFilter:
@@ -372,7 +424,7 @@ class DeepLog:
         if node is not None and node.get('parser'):
             node_parser = node.get('parser')
             parser_name = node_parser.get('name')
-            parser_params = node_parser.get('params')
+            parser_params = node_parser.get('params') if node_parser.get('params') else {}
             parser = globals()[parser_name](**parser_params)
             return parser.parse_file(fp)
         else:
@@ -386,7 +438,7 @@ class DeepLog:
             node_handlers = node.get('handlers')
             for one_node_handler in node_handlers:
                 handler_name = one_node_handler.get('name')
-                handler_params = one_node_handler.get('params')
+                handler_params = one_node_handler.get('params') if one_node_handler.get('params') else {}
                 handler = globals()[handler_name](**handler_params)
                 parsed_results = [handler.handle(one) for one in parsed_results]
 
@@ -399,7 +451,7 @@ class DeepLog:
             node_filters = node.get('filters')
             for one_node_filters in node_filters:
                 filter_name = one_node_filters.get('name')
-                filter_params = one_node_filters.get('params')
+                filter_params = one_node_filters.get('params') if one_node_filters.get('params') else {}
                 filter = globals()[filter_name](**filter_params)
                 parsed_results = [one for one in parsed_results if filter.filter(one)]
 
@@ -552,6 +604,7 @@ def build_recent_filter(recent):
     start_time = datetime.now().timestamp() - recent_seconds
     return file_filter_template.format(start_time)
 
+
 def build_tags_filter(tags):
     target_tags = set(tags.split(','))
     return 'tags & {}'.format(str(target_tags))
@@ -604,7 +657,6 @@ def main():
     if args.tags:
         post_filters.append(build_tags_filter(args.tags))
 
-
     for item in log_miner.mining(args.dirs, file_filters, [],
                                  args.subscribe):
 
@@ -615,7 +667,10 @@ def main():
         else:
             if args.subscribe or not args.order_by:
                 # not subscribe mode or not order by mode, print out immediately
-                print(format.format(**{**default_value, **item}))
+                if default_value:
+                    print(format.format(**{**default_value, **item}))
+                else:
+                    print(format.format(str(item)))
             else:
                 # only for order by
                 items.append(item)
@@ -627,7 +682,10 @@ def main():
     items.sort(key=lambda x: x.get(args.order_by), reverse=args.reverse)
 
     for one in items:
-        print(format.format(**{**default_value, **one}))
+        if default_value:
+            print(format.format(**{**default_value, **one}))
+        else:
+            print(format.format(str(one)))
 
 
 if __name__ == '__main__':
