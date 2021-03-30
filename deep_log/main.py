@@ -155,6 +155,32 @@ class TypeLogHandler(LogHandler):
                     return one_log_item
 
 
+class TagLogHandler(LogHandler):
+    def __init__(self, definitions):
+        # {
+        #   'name': 'tag_name',
+        #   'condition': 'tag_name
+        # }
+        self.tag_definitions = definitions
+
+    def handle(self, one_log_item):
+        tags = one_log_item.get('tags') if 'tags' in one_log_item else set()
+        for one_definition in self.tag_definitions:
+            name, condition = one_definition
+            if name in tags:
+                # already tagged
+                continue
+            else:
+                try:
+                    if eval(condition, {**one_log_item, **built_function}):
+                        tags.add(name)
+                except Exception as e:
+                    logging.error("can not evaluate condition {} on {}".format(condition, str(one_log_item)))
+
+        one_log_item['tags'] = tags
+        return one_log_item
+
+
 class FileNameFilter:
     def __init__(self, filters):
         if filters:
@@ -465,7 +491,54 @@ def make_directory(dir):
         os.makedirs(dir)
 
 
+def build_recent_file_filter(recent):
+    file_filter_template = 'mtime.timestamp() - {} > 0'
+    if recent is None:
+        # no fitler
+        return FileInfoFilter(None)
 
+    recent_seconds = 0
+    if recent.isdigit():
+        # seconds by default
+        recent_seconds = int(recent)
+    elif recent.lower().endswith('s'):
+        recent_seconds = int(recent[:-1])
+    elif recent.lower().endswith('m'):
+        recent_seconds = int(recent[:-1]) * 60
+    elif recent.lower().endswith('h'):
+        recent_seconds = int(recent[:-1]) * 60 * 60
+    elif recent.lower().endswith('d'):
+        recent_seconds = int(recent[:-1]) * 60 * 60 * 24
+    else:
+        raise Exception("unsupported recent format {}".format(recent))
+
+    start_time = datetime.now().timestamp() - recent_seconds
+    return FileInfoFilter(file_filter_template.format(start_time))
+
+
+def build_recent_filter(recent):
+    file_filter_template = 'time.timestamp() - {} > 0'
+    if recent is None:
+        # no fitler
+        return FileInfoFilter(None)
+
+    recent_seconds = 0
+    if recent.isdigit():
+        # seconds by default
+        recent_seconds = int(recent)
+    elif recent.lower().endswith('s'):
+        recent_seconds = int(recent[:-1])
+    elif recent.lower().endswith('m'):
+        recent_seconds = int(recent[:-1]) * 60
+    elif recent.lower().endswith('h'):
+        recent_seconds = int(recent[:-1]) * 60 * 60
+    elif recent.lower().endswith('d'):
+        recent_seconds = int(recent[:-1]) * 60 * 60 * 24
+    else:
+        raise Exception("unsupported recent format {}".format(recent))
+
+    start_time = datetime.now().timestamp() - recent_seconds
+    return file_filter_template.format(start_time)
 
 
 def main():
@@ -480,6 +553,7 @@ def main():
     parser.add_argument('-o', '--order-by', help='field to order by')
     parser.add_argument('-r', '--reverse', action='store_true', help='reverse order, only work with order by')
     parser.add_argument('--limit', type=int, help='limit query count')
+    parser.add_argument('--recent', help='query to recent time')
     parser.add_argument('dirs', metavar='N', nargs='+', help='log dirs to analyze')
 
     args = parser.parse_args()
@@ -491,21 +565,43 @@ def main():
     items = []
 
     count = 0
-    for item in log_miner.mining(args.dirs, [FileNameFilter(args.file_name), FileInfoFilter(args.file_filter)], [],
-                                 args.subscribe):
-        if args.filter:
-            if not eval(args.filter, {**built_function, **item}):
-                continue
-        if args.subscribe or not args.order_by:
-            # not subscribe mode or not order by mode, print out immediately
-            print(format.format(**{**default_value, **item}))
-        else:
-            # only for order by
-            items.append(item)
 
-        count = count + 1
-        if args.limit is not None and count >= args.limit:
-            break
+    # build file builders
+    file_filters = []
+    if args.file_name:
+        file_filters.append(FileNameFilter(args.file_name))
+
+    if args.file_filter:
+        file_filters.append(FileInfoFilter(args.file_filter))
+
+    if args.recent:
+        file_filters.append(build_recent_file_filter(args.recent))
+
+    post_filters = []
+    if args.filter:
+        post_filters.append(args.filter)
+
+    if args.recent:
+        post_filters.append(build_recent_filter(args.recent))
+
+    for item in log_miner.mining(args.dirs, file_filters, [],
+                                 args.subscribe):
+
+        for one_post_filters in post_filters:
+            if not eval(one_post_filters, {**built_function, **item}):
+                # not passed
+                break
+        else:
+            if args.subscribe or not args.order_by:
+                # not subscribe mode or not order by mode, print out immediately
+                print(format.format(**{**default_value, **item}))
+            else:
+                # only for order by
+                items.append(item)
+
+            count = count + 1
+            if args.limit is not None and count >= args.limit:
+                break
 
     items.sort(key=lambda x: x.get(args.order_by), reverse=args.reverse)
 
