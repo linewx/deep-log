@@ -22,6 +22,7 @@ logging.basicConfig(level=logging.INFO,
 built_function = {
     'datetime': datetime,  # datetime function
     'path': path,  # datetime function
+    're': re
 }
 
 
@@ -278,29 +279,64 @@ class Trie:
         return current_value
 
 
-class LogMiner:
+class DeepLog:
     def __init__(self, setting_file):
         self.tree = None
+        self.settings = None
+        setting_file = self.get_settings_file(setting_file)
 
         with open(setting_file) as f:
-            settings = json.load(f)
-            loggers = settings.get('loggers')
-            root_node = TrieNode("/", value=None)
-            if 'root' in loggers:
-                root_node = TrieNode("/", value=loggers.get('root'))
+            if setting_file.endswith('yaml'):
+                # try use yaml
+                import yaml
+                self.settings = yaml.load(f)
+            else:
+                self.settings = json.load(f)
+            loggers = self.settings.get('loggers')
+
+            # root_node = TrieNode("/", value=None)
+            root_node = TrieNode("/", value=self.settings.get('root'))
 
             self.tree = Trie(root_node)
 
-            for key, value in loggers.items():
-                if key == 'root':
-                    # root node should be already added
-                    continue
-                if value is None or 'path' not in value:
+            for one_logger in loggers:
+                if one_logger is None or 'path' not in one_logger:
                     logging.warning("config %(key)s ignore, because no path defined" % locals())
                 else:
-                    the_path = value.get('path')
-                    the_node = TrieNode(the_path, value)
-                    self.tree.insert(the_path, value)
+                    the_path = one_logger.get('path')
+                    the_node = TrieNode(the_path, one_logger)
+                    self.tree.insert(the_path, one_logger)
+
+    def get_settings_file(self, custom_settings=None):
+        config_dir = path.expanduser("~/.deep_log")
+        if custom_settings is None:
+            make_directory(config_dir)
+
+            # settings.yaml first
+            default_yaml_settings = os.path.join(config_dir, "settings.yaml")
+            if os.path.exists(default_yaml_settings):
+                return default_yaml_settings
+
+            # settings.json secondly
+            default_json_settings = os.path.join(config_dir, "settings.json")
+
+            if os.path.exists(default_json_settings):
+                return default_json_settings
+
+            default_settings = {
+                "common": {
+
+                },
+                "loggers": {
+                    "root": {}
+                }
+            }
+            with open(default_json_settings, "w") as f:
+                json.dump(default_settings, f)
+
+            return default_json_settings
+        else:
+            return custom_settings
 
     def _parse_file(self, fp):
         file_name = fp.name
@@ -429,25 +465,7 @@ def make_directory(dir):
         os.makedirs(dir)
 
 
-def get_settings_file(custom_settings=None):
-    config_dir = path.expanduser("~/.deep_log")
-    if custom_settings is None:
-        make_directory(config_dir)
 
-        default_settings_json = os.path.join(config_dir, "settings.json")
-        if not os.path.exists(default_settings_json):
-            default_settings = {
-                "common": {
-
-                },
-                "loggers": {
-                    "root": {}
-                }
-            }
-            with open(default_settings_json, "w") as f:
-                json.dump(default_settings, f)
-        return os.path.join(config_dir, "settings.json")
-    return custom_settings
 
 
 def main():
@@ -466,7 +484,7 @@ def main():
 
     args = parser.parse_args()
 
-    log_miner = LogMiner(get_settings_file(args.file))
+    log_miner = DeepLog(args.file)
     format = "{raw}" if not args.format else args.format
     default_value = gen_default_values(format)
 
