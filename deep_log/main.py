@@ -124,6 +124,11 @@ class DefaultLogHandler(LogHandler):
         return one_log_item
 
 
+class ModuleLogHandler(LogHandler):
+    def handle(self, one_log_item):
+        return one_log_item
+
+
 class TypeLogHandler(LogHandler):
     def __init__(self, definitions):
         self.type_definitions = definitions
@@ -393,14 +398,22 @@ class DeepLog:
                     the_node = TrieNode(the_path, one_logger)
                     self.tree.insert(the_path, one_logger)
 
-    def get_all_paths(self):
+    def get_all_paths(self, modules=None):
         paths = []
         loggers = self.settings.get('loggers')
         for one_logger in loggers:
             if one_logger is not None and 'path' in one_logger:
                 the_path = one_logger.get('path')
                 the_path = the_path.format(**self.settings.get('variables'))
-                paths.append(the_path)
+                the_modules = set() if one_logger.get('modules') is None else one_logger.get('modules')
+                if not modules:
+                    # no modules limit
+                    paths.append(the_path)
+                else:
+                    if modules & the_modules:
+                        paths.append(the_path)
+
+        return paths
 
     def get_settings_file(self, custom_settings=None):
         config_dir = path.expanduser("~/.deep_log")
@@ -645,6 +658,7 @@ def main():
     parser.add_argument('--limit', type=int, help='limit query count')
     parser.add_argument('--recent', help='query to recent time')
     parser.add_argument('--tags', help='query by tags')
+    parser.add_argument('--modules', help='query by tags')
     parser.add_argument('-D', action='append', dest='variables', help='definitions')
     parser.add_argument('dirs', metavar='N', nargs='*', help='log dirs to analyze')
 
@@ -685,7 +699,10 @@ def main():
 
     the_dirs = args.dirs
     if not the_dirs:
-        the_dirs = log_miner.get_all_paths()
+        modules = None
+        if args.modules:
+            modules = set(args.modules.split(','))
+        the_dirs = log_miner.get_all_paths(modules)
 
     for item in log_miner.mining(the_dirs, file_filters, [],
                                  args.subscribe):
