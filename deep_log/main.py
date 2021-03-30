@@ -360,7 +360,7 @@ class Trie:
 
 
 class DeepLog:
-    def __init__(self, setting_file):
+    def __init__(self, setting_file, variables=None):
         self.tree = None
         self.settings = None
         setting_file = self.get_settings_file(setting_file)
@@ -372,6 +372,11 @@ class DeepLog:
                 self.settings = yaml.load(f)
             else:
                 self.settings = json.load(f)
+
+            # populate variables
+            if variables is not None:
+                self.settings.get('variables').update(variables)
+
             loggers = self.settings.get('loggers')
 
             # root_node = TrieNode("/", value=None)
@@ -384,6 +389,7 @@ class DeepLog:
                     logging.warning("config %(key)s ignore, because no path defined" % locals())
                 else:
                     the_path = one_logger.get('path')
+                    the_path = the_path.format(**self.settings.get('variables'))
                     the_node = TrieNode(the_path, one_logger)
                     self.tree.insert(the_path, one_logger)
 
@@ -624,11 +630,16 @@ def main():
     parser.add_argument('--limit', type=int, help='limit query count')
     parser.add_argument('--recent', help='query to recent time')
     parser.add_argument('--tags', help='query by tags')
+    parser.add_argument('-D', action='append', dest='variables', help='definitions')
     parser.add_argument('dirs', metavar='N', nargs='+', help='log dirs to analyze')
 
     args = parser.parse_args()
 
-    log_miner = DeepLog(args.file)
+    variables = {}
+    if args.variables:
+        variables = {one.split('=')[0]: one.split('=')[1] for one in args.variables}
+
+    log_miner = DeepLog(args.file, variables)
     format = "{raw}" if not args.format else args.format
     default_value = gen_default_values(format)
 
