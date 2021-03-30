@@ -405,12 +405,12 @@ class DeepLog:
             if one_logger is not None and 'path' in one_logger:
                 the_path = one_logger.get('path')
                 the_path = the_path.format(**self.settings.get('variables'))
-                the_modules = set() if one_logger.get('modules') is None else one_logger.get('modules')
+                the_modules = set() if one_logger.get('modules') is None else set(one_logger.get('modules'))
                 if not modules:
                     # no modules limit
                     paths.append(the_path)
                 else:
-                    if modules & the_modules:
+                    if set(modules) & the_modules:
                         paths.append(the_path)
 
         return paths
