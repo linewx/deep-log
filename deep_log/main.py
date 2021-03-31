@@ -713,7 +713,7 @@ def main():
                 # not passed
                 break
         else:
-            if not args.order_by or not args.analyze:
+            if not args.order_by and not args.analyze:
                 # not order by mode, print out immediately
                 if default_value:
                     print(format.format(**{**default_value, **item}))
@@ -741,7 +741,8 @@ def main():
         import pandas as pd
         data = pd.DataFrame(items)
         result = eval(args.analyze, {'data': data})
-        
+        print(result)
+
 
 
 if __name__ == '__main__':
