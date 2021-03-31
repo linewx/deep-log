@@ -364,6 +364,63 @@ class Trie:
         return current_value
 
 
+def get_settings(settings_file=None, variables=None, root_parser=None):
+    # get settings file
+    the_settings_file = None
+    if settings_file is not None:
+        the_settings_file = settings_file
+    else:
+        config_dir = path.expanduser("~/.deep_log")
+        make_directory(config_dir) # ensure config file exists
+
+        # settings.yaml first
+        default_yaml_settings = os.path.join(config_dir, "settings.yaml")
+        if os.path.exists(default_yaml_settings):
+            the_settings_file = default_yaml_settings
+        else:
+            # settings.json secondly
+            default_json_settings = os.path.join(config_dir, "settings.json")
+
+            if os.path.exists(default_json_settings):
+                the_settings_file =  default_json_settings
+            else:
+                default_settings = {
+                    "common": {},
+                    "variables": {},
+                    "root": {
+                        "path": "/"
+                    },
+                    "loggers": []
+                }
+                with open(default_json_settings, "w") as f:
+                    json.dump(default_settings, f)
+
+                the_settings_file = default_json_settings
+
+    # populate settings
+    settings = None
+    if the_settings_file.endswith('yaml'):
+        import yaml
+        settings = yaml.safe_load(f)
+    else:
+        settings = json.load(f)
+    if not variables:
+        settings.get('variables').update(variables)
+    # update root parser
+    if root_parser:
+        settings.get('root')['parser'] = {'name': 'DefaultLogParser', 'params': {'pattern': root_parser}}
+
+    # update path
+    settings.get("root")['path'] = settings.get("root").get('path').format(**settings.get('variables'))
+
+    # update logger paths
+    for one_logger in settings.get('loggers'):
+        one_logger['path'] = one_logger.get('path').format(**settings.get('variables'))
+
+    return settings
+
+
+
 class DeepLog:
     def __init__(self, setting_file, variables=None):
         self.tree = None
@@ -544,7 +601,7 @@ class DeepLog:
         dir = path.abspath(dir)
         return glob.glob(dir)
 
-    def mining(self, target_dirs, file_filters=None, pre_content_filters=None, subscribe=False):
+    def mining(self, target_dirs, file_filters=None, pre_content_filters=None, root_parser=None, subscribe=False):
         full_paths = []
 
         dirs = []
@@ -648,6 +705,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', help='config file')
     parser.add_argument('-l', '--filter', help='log filter')
+    parser.add_argument('-p', '--parser', help='root parser')
     parser.add_argument('-t', '--file-filter', help='file filters')
     parser.add_argument('-n', '--file-name', help='file name filters')
     parser.add_argument('-u', '--layout', help='return layout ')
@@ -705,8 +763,8 @@ def main():
             modules = set(args.modules.split(','))
         the_dirs = log_miner.get_all_paths(modules)
 
-    for item in log_miner.mining(the_dirs, file_filters, [],
-                                 args.subscribe):
+    for item in log_miner.mining(the_dirs, file_filters=file_filters, pre_content_filters=[],
+                                 root_parser=args.parser, subscribe=args.subscribe):
 
         for one_post_filters in post_filters:
             if not eval(one_post_filters, {**built_function, **item}):
@@ -742,7 +800,6 @@ def main():
         data = pd.DataFrame(items)
         result = eval(args.analyze, {'data': data})
         print(result)
-
 
 
 if __name__ == '__main__':
