@@ -657,6 +657,7 @@ def main():
     parser.add_argument('-r', '--reverse', action='store_true', help='reverse order, only work with order by')
     parser.add_argument('--limit', type=int, help='limit query count')
     parser.add_argument('--recent', help='query to recent time')
+    parser.add_argument('-y', '--analyze', help='analyze')
     parser.add_argument('--tags', help='query by tags')
     parser.add_argument('--modules', help='query by tags')
     parser.add_argument('-D', action='append', dest='variables', help='definitions')
@@ -712,8 +713,8 @@ def main():
                 # not passed
                 break
         else:
-            if args.subscribe or not args.order_by:
-                # not subscribe mode or not order by mode, print out immediately
+            if not args.order_by or not args.analyze:
+                # not order by mode, print out immediately
                 if default_value:
                     print(format.format(**{**default_value, **item}))
                 else:
@@ -726,13 +727,21 @@ def main():
             if args.limit is not None and count >= args.limit:
                 break
 
-    items.sort(key=lambda x: x.get(args.order_by), reverse=args.reverse)
+    if args.order_by:
+        # order by mode, need shuffle in memory
+        items.sort(key=lambda x: x.get(args.order_by), reverse=args.reverse)
 
-    for one in items:
-        if default_value:
-            print(format.format(**{**default_value, **one}))
-        else:
-            print(format.format(str(one)))
+        for one in items:
+            if default_value:
+                print(format.format(**{**default_value, **one}))
+            else:
+                print(format.format(str(one)))
+
+    elif args.analyze:
+        import pandas as pd
+        data = pd.DataFrame(items)
+        result = eval(args.analyze, {'data': data})
+        
 
 
 if __name__ == '__main__':
