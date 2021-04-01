@@ -364,6 +364,23 @@ class Trie:
         return current_value
 
 
+def evaluate_variable(variable, variables, depth=5):
+    result = variable
+    for index in range(depth):
+        if '{' in result and '}' in result:
+            result = result.format(**variables)
+
+    return result
+
+
+def evaluate_variables(variables, depth=5):
+    results = {}
+    for key, value in variables.items():
+        results[key] = evaluate_variable(key, variables, depth)
+
+    return results
+
+
 def get_settings(settings_file=None, variables=None, root_parser=None):
     # get settings file
     the_settings_file = None
@@ -371,7 +388,7 @@ def get_settings(settings_file=None, variables=None, root_parser=None):
         the_settings_file = settings_file
     else:
         config_dir = path.expanduser("~/.deep_log")
-        make_directory(config_dir) # ensure config file exists
+        make_directory(config_dir)  # ensure config file exists
 
         # settings.yaml first
         default_yaml_settings = os.path.join(config_dir, "settings.yaml")
@@ -382,7 +399,7 @@ def get_settings(settings_file=None, variables=None, root_parser=None):
             default_json_settings = os.path.join(config_dir, "settings.json")
 
             if os.path.exists(default_json_settings):
-                the_settings_file =  default_json_settings
+                the_settings_file = default_json_settings
             else:
                 default_settings = {
                     "common": {},
@@ -401,11 +418,17 @@ def get_settings(settings_file=None, variables=None, root_parser=None):
     settings = None
     if the_settings_file.endswith('yaml'):
         import yaml
-        settings = yaml.safe_load(f)
+        with open(the_settings_file) as f:
+            settings = yaml.safe_load(f)
     else:
-        settings = json.load(f)
-    if not variables:
+        with open(the_settings_file) as f:
+            settings = json.load(f)
+    if variables:
         settings.get('variables').update(variables)
+
+    # populate variables
+    settings.get('variables').update(evaluate_variables(variables, depth=5))
+
     # update root parser
     if root_parser:
         settings.get('root')['parser'] = {'name': 'DefaultLogParser', 'params': {'pattern': root_parser}}
@@ -420,40 +443,26 @@ def get_settings(settings_file=None, variables=None, root_parser=None):
     return settings
 
 
-
 class DeepLog:
-    def __init__(self, setting_file, variables=None):
+    def __init__(self, settings):
         self.tree = None
-        self.settings = None
-        setting_file = self.get_settings_file(setting_file)
+        self.settings = settings
 
-        with open(setting_file) as f:
-            if setting_file.endswith('yaml'):
-                # try use yaml
-                import yaml
-                self.settings = yaml.load(f)
+        loggers = self.settings.get('loggers')
+
+        # root_node = TrieNode("/", value=None)
+        root_node = TrieNode("/", value=self.settings.get('root'))
+
+        self.tree = Trie(root_node)
+
+        for one_logger in loggers:
+            if one_logger is None or 'path' not in one_logger:
+                logging.warning("config %(key)s ignore, because no path defined" % locals())
             else:
-                self.settings = json.load(f)
-
-            # populate variables
-            if variables is not None:
-                self.settings.get('variables').update(variables)
-
-            loggers = self.settings.get('loggers')
-
-            # root_node = TrieNode("/", value=None)
-            root_node = TrieNode("/", value=self.settings.get('root'))
-
-            self.tree = Trie(root_node)
-
-            for one_logger in loggers:
-                if one_logger is None or 'path' not in one_logger:
-                    logging.warning("config %(key)s ignore, because no path defined" % locals())
-                else:
-                    the_path = one_logger.get('path')
-                    the_path = the_path.format(**self.settings.get('variables'))
-                    the_node = TrieNode(the_path, one_logger)
-                    self.tree.insert(the_path, one_logger)
+                the_path = one_logger.get('path')
+                the_path = the_path.format(**self.settings.get('variables'))
+                the_node = TrieNode(the_path, one_logger)
+                self.tree.insert(the_path, one_logger)
 
     def get_all_paths(self, modules=None):
         paths = []
@@ -727,7 +736,8 @@ def main():
     if args.variables:
         variables = {one.split('=')[0]: one.split('=')[1] for one in args.variables}
 
-    log_miner = DeepLog(args.file, variables)
+    # log_miner = DeepLog(args.file, variables)
+    log_miner = DeepLog(get_settings(args.file, variables, args.parser))
     format = "{raw}" if not args.format else args.format
     default_value = gen_default_values(format)
 
