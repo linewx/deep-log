@@ -1,12 +1,13 @@
 from setuptools import setup, find_packages
 install_requires = [
-   
+    'pyyaml>=5.3',
+    'pandas~=1.0.5'
 ]
 
 
 setup(
     name='deep-log',
-    version="0.0.2",
+    version="0.0.3",
     description='log analysis tool',
     license='MIT',
     author='Lu Ganlin',

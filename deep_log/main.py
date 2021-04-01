@@ -718,7 +718,7 @@ def main():
     parser.add_argument('-t', '--file-filter', help='file filters')
     parser.add_argument('-n', '--file-name', help='file name filters')
     parser.add_argument('-u', '--layout', help='return layout ')
-    parser.add_argument('-m', '--format', help='print format ')
+    parser.add_argument('-m', '--format', help='print format')
     parser.add_argument('-s', '--subscribe', action='store_true', help='subscribe mode')
     parser.add_argument('-o', '--order-by', help='field to order by')
     parser.add_argument('-r', '--reverse', action='store_true', help='reverse order, only work with order by')
