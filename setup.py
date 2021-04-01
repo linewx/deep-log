@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 install_requires = [
     'pyyaml>=5.3',
-    'pandas~=1.0.5'
+    'pandas>=1.0.5'
 ]
 
 

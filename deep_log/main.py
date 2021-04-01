@@ -727,6 +727,7 @@ def main():
     parser.add_argument('-y', '--analyze', help='analyze')
     parser.add_argument('--tags', help='query by tags')
     parser.add_argument('--modules', help='query by tags')
+    parser.add_argument('--full', action='store_true', help='display full')
     parser.add_argument('-D', action='append', dest='variables', help='definitions')
     parser.add_argument('dirs', metavar='N', nargs='*', help='log dirs to analyze')
 
@@ -809,6 +810,8 @@ def main():
         import pandas as pd
         data = pd.DataFrame(items)
         result = eval(args.analyze, {'data': data})
+        if args.full:
+            pd.set_option('display.max_colwidth', -1)
         print(result)
 
 
