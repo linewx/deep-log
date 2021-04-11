@@ -3,6 +3,7 @@ import os
 import re
 from datetime import datetime
 from os import path
+from string import Formatter
 
 built_function = {
     'datetime': datetime,  # datetime function
@@ -56,3 +57,6 @@ def get_fileinfo(filename):
             'name': filename,
             'exists': False
         }
+
+
+

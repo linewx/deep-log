@@ -1,11 +1,17 @@
 import fnmatch
 import json
+import logging
 import os
 from collections import OrderedDict
 from os import path
 
 # trie node
 from deep_log import utils
+
+from deep_log import parser
+from deep_log import handler
+
+from deep_log import filter
 
 
 class Logger:
@@ -80,10 +86,18 @@ class Loggers:
 
 class LogConfig:
     def __init__(self, config_file=None, variables=None, filters=None, handlers=None, parsers=None):
-        self.configs = self.load(config_file, variables)
+        self.settings = self._parse_config(config_file, variables)
 
+        self.loggers = self._build_loggers(self.settings)
 
-    def load(self, settings_file=None, variables=None, root_parser=None):
+        self.global_settings = {
+            'parsers': [],
+            'filters': [],
+            'handlers': [],
+            'meta_filters': []
+        }
+
+    def _parse_config(self, settings_file=None, variables=None, root_parser=None):
         # get settings file
         the_settings_file = None
         if settings_file is not None:
@@ -143,3 +157,114 @@ class LogConfig:
             one_logger['path'] = one_logger.get('path').format(**settings.get('variables'))
 
         return settings
+
+    def _build_loggers(self, settings):
+        loggers_section = settings.get('loggers')
+
+        # root_node = TrieNode("/", value=None)
+        root_node = Logger("/", value=settings.get('root'))
+
+        loggers = Loggers(root_node)
+
+        for one_logger in loggers_section:
+            if one_logger is None or 'path' not in one_logger:
+                logging.warning("config %(key)s ignore, because no path defined" % locals())
+            else:
+                the_path = one_logger.get('path')
+                the_path = the_path.format(**settings.get('variables'))
+                the_node = Logger(the_path, one_logger)
+                loggers.insert(the_path, one_logger)
+
+        return loggers
+
+    def get_default_paths(self, modules=None):
+        paths = []
+        loggers = self.settings.get('loggers')
+        for one_logger in loggers:
+            if one_logger is not None and 'path' in one_logger:
+                the_path = one_logger.get('path')
+                the_path = the_path.format(**self.settings.get('variables'))
+                the_modules = set() if one_logger.get('modules') is None else set(one_logger.get('modules'))
+                if not modules:
+                    # no modules limit
+                    paths.append(the_path)
+                else:
+                    if set(modules) & the_modules:
+                        paths.append(the_path)
+
+        return paths
+
+    def get_parser(self, file_name):
+        node = self.loggers.find(file_name, accept=lambda x: 'parser' in x)
+        if node is not None and node.get('parser'):
+            node_parser = node.get('parser')
+            parser_name = node_parser.get('name')
+            parser_params = node_parser.get('params') if node_parser.get('params') else {}
+            deep_parser = getattr(parser, parser_name)(**parser_params)
+            return deep_parser
+        else:
+            return parser.DefaultLogParser()
+
+    def get_handlers(self, file_name, scope=('node', 'global')):
+        handlers = []
+
+        if 'node' in scope:
+            node = self.loggers.find(file_name, accept=lambda x: 'handlers' in x)
+
+            if node is not None and node.get('handlers'):
+                node_handlers = node.get('handlers')
+                for one_node_handler in node_handlers:
+                    handler_name = one_node_handler.get('name')
+                    handler_params = one_node_handler.get('params') if one_node_handler.get('params') else {}
+                    deep_handler = getattr(handler, handler_name)(**handler_params)
+                    handlers.append(deep_handler)
+        if 'global' in scope:
+            handlers.extend(self.global_settings['handlers'])
+
+        return handlers
+
+    def get_filters(self, file_name, scope=('node', 'global')):
+        filters = []
+
+        if 'node' in scope:
+            node = self.loggers.find(file_name, accept=lambda x: 'filters' in x)
+            if node is not None and node.get('filters'):
+                node_filters = node.get('filters')
+                for one_node_filters in node_filters:
+                    filter_name = one_node_filters.get('name')
+                    filter_params = one_node_filters.get('params') if one_node_filters.get('params') else {}
+                    deep_filter = getattr(filter, filter_name)(**filter_params)
+                    filters.append(deep_filter)
+
+        if 'global' in scope:
+            filters.extend(self.global_settings['filters'])
+
+        return filters
+
+    def get_meta_filters(self, file_name, scope=('node', 'global')):
+        meta_filters = []
+        if 'node' in scope:
+            node = self.loggers.find(file_name, accept=lambda x: 'meta_filters' in x)
+            if node is not None and node.get('meta_filters'):
+                node_filters = node.get('meta_filters')
+                for one_node_filters in node_filters:
+                    filter_name = one_node_filters.get('name')
+                    filter_params = one_node_filters.get('params') if one_node_filters.get('params') else {}
+                    deep_filter = getattr(filter, filter_name)(**filter_params)
+                    meta_filters.append(deep_filter)
+
+        if 'global' in scope:
+            meta_filters.extend(self.global_settings['meta_filters'])
+        return meta_filters
+
+    def add_filters(self, filters, scope='global'):
+        if scope == 'global' and filters:
+            self.global_settings['filters'].extend(filters)
+
+    def add_handlers(self, handlers, scope='global'):
+        if scope == 'global' and handlers:
+            self.global_settings['filters'].extend(handlers)
+
+    def add_parsers(self, parsers, scope='global'):
+        if scope == 'global' and parsers:
+            self.global_settings['filters'].extend(parsers)

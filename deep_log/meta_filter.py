@@ -3,12 +3,12 @@ import fnmatch
 from deep_log import utils
 
 
-class FileFilter:
+class MetaFilter:
     def filter_file(self, file_name):
         return True
 
 
-class NameFileFilter(FileFilter):
+class NameFilter(MetaFilter):
     def __init__(self, filters):
         if filters:
             self.filters = filters.split(',')
@@ -25,7 +25,7 @@ class NameFileFilter(FileFilter):
             return True
 
 
-class DslFileFilter(FileFilter):
+class DslMetaFilter(MetaFilter):
     def __init__(self, file_filter):
         self.file_filter = file_filter
         self.code = compile(self.file_filter)

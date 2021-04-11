@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from deep_log import file_filter
+from deep_log import meta_filter
 
 from deep_log import filter
 
@@ -40,13 +40,13 @@ class FilterFactory:
         return filter.DslFilter('tags & {}'.format(str(target_tags)))
 
 
-class FileFilterFactory:
+class MetaFilterFactory:
     @staticmethod
     def create_recent_filter(recent):
-        file_filter_template = 'mtime.timestamp() - {} > 0'
+        meta_filter_template = 'mtime.timestamp() - {} > 0'
         if recent is None:
             # no fitler
-            return file_filter.DslFileFilter(None)
+            return meta_filter.DslMetaFilter(None)
 
         recent_seconds = 0
         if recent.isdigit():
@@ -64,4 +64,12 @@ class FileFilterFactory:
             raise Exception("unsupported recent format {}".format(recent))
 
         start_time = datetime.now().timestamp() - recent_seconds
-        return file_filter.DslFileFilter(file_filter_template.format(start_time))
+        return meta_filter.DslMetaFilter(meta_filter_template.format(start_time))
+
+    @staticmethod
+    def create_name_filter(pattern):
+        return meta_filter.NameFilter(pattern)
+
+    @staticmethod
+    def create_dsl_filter(dsl):
+        return meta_filter.DslMetaFilter(dsl)
