@@ -25,7 +25,7 @@ class CmdHelper:
             return filters
 
         if args.filter:
-            filters.append(factory.FilterFactory.create_dsl_filter(args.filter))
+            filters.append(factory.FilterFactory.create_dsl_filter(args.filter, args.pass_on_exception))
 
         if args.recent:
             filters.append(factory.FilterFactory.create_recent_dsl(args.recent))
@@ -82,6 +82,7 @@ class CmdHelper:
         parser.add_argument('--modules', help='query by tags')
         parser.add_argument('--name-only', action='store_true', help='show only file name')
         parser.add_argument('--full', action='store_true', help='display full')
+        parser.add_argument('--pass-on-exception', action='store_true', help='default value if met exception ')
         parser.add_argument('-D', action='append', dest='variables', help='definitions')
         parser.add_argument('dirs', metavar='N', nargs='*', help='log dirs to analyze')
 

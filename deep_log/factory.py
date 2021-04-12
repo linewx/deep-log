@@ -7,8 +7,8 @@ from deep_log import filter
 
 class FilterFactory:
     @staticmethod
-    def create_dsl_filter(dsl):
-        return filter.DslFilter(dsl)
+    def create_dsl_filter(dsl, pass_on_exception=False):
+        return filter.DslFilter(dsl, pass_on_exception)
 
     @staticmethod
     def create_recent_dsl(recent):

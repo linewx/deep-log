@@ -7,8 +7,6 @@ from datetime import datetime
 from os import path
 
 
-
-
 class LogHandler:
     def handle(self, one_log_item):
         return one_log_item
@@ -23,9 +21,20 @@ class ModuleLogHandler(LogHandler):
     def handle(self, one_log_item):
         return one_log_item
 
-# re.search("\n(?P<exception>.*?Exception):(?P<exception_detail>.*)", one_log_item['content']).groupdict()
+
+# re.search("\n(?P<exception>.*?Exception):(?P<exception_messaage>.*)", one_log_item['content']).groupdict()
 class ReLogHandler(LogHandler):
-    pass
+    def __init__(self, pattern):
+        self.pattern = pattern
+
+    def handle(self, one_log_item):
+        try:
+            results = re.search(self.pattern, one_log_item['content']).groupdict()
+            if results:
+                one_log_item.update(results)
+        except:
+            return one_log_item
+
 
 class TypeLogHandler(LogHandler):
     def __init__(self, definitions):
