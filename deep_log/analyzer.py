@@ -7,7 +7,7 @@ class LogFormatter:
 
         self.full_mode = True if format_string == '{}' else False
 
-        self.default_values = LogFormatter.build_default_values(format_string)
+        self.default_values = LogFormatter.build_default_values(self.log_format)
 
     @staticmethod
     def build_default_values(format_string):

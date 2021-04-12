@@ -80,11 +80,13 @@ class CmdHelper:
         parser.add_argument('-D', action='append', dest='variables', help='definitions')
         parser.add_argument('dirs', metavar='N', nargs='*', help='log dirs to analyze')
 
+        return parser.parse_args()
+
 
 def main():
-    args = CmdHelper.build_args_parser().parse_args()
+    args = CmdHelper.build_args_parser()
     log_config = LogConfig(args.file, CmdHelper.build_variables(args))
-    log_config.add_filters(CmdHelper.build_filters(), scope='global')
+    log_config.add_filters(CmdHelper.build_filters(args), scope='global')
     log_miner = DeepLogMiner(log_config)
     log_analyzer = LogAnalyzer(log_miner)
 
