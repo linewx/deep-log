@@ -52,6 +52,8 @@ class CmdHelper:
         if args.recent:
             meta_filters.append(factory.MetaFilterFactory.create_recent_filter(args.recent))
 
+        return meta_filters
+
     @staticmethod
     def build_variables(args):
         variables = {}
@@ -84,15 +86,22 @@ class CmdHelper:
 
         return parser.parse_args()
 
+    @staticmethod
+    def build_modules(args):
+        if args.modules:
+            return args.modules.split(',')
+        return []
+
 
 def main():
     args = CmdHelper.build_args_parser()
     log_config = LogConfig(args.file, CmdHelper.build_variables(args))
     log_config.add_filters(CmdHelper.build_filters(args), scope='global')
+    log_config.add_meta_filters(CmdHelper.build_meta_filters(args), scope='global')
     log_miner = DeepLogMiner(log_config)
     log_analyzer = LogAnalyzer(log_miner)
 
-    log_analyzer.analyze(dirs=args.dirs, modules=args.modules, subscribe=args.subscribe, order_by=args.order_by,
+    log_analyzer.analyze(dirs=args.dirs, modules=CmdHelper.build_modules(args), subscribe=args.subscribe, order_by=args.order_by,
                          analyze=args.analyze,
                          log_format=args.format, limit=args.limit, full=args.full, reverse=args.reverse)
 

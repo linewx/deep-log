@@ -29,7 +29,7 @@ class LogAnalyzer:
     def _build_formatter(self, format_string=None):
         return LogFormatter(format_string)
 
-    def analyze(self, dirs=None, modules=None, subscribe=None, order_by=None, analyze=None, log_format=None, limit=None, full=False,
+    def analyze(self, dirs=None, modules=(), subscribe=None, order_by=None, analyze=None, log_format=None, limit=None, full=False,
                 reverse=False):
 
         formmater = self._build_formatter(log_format)

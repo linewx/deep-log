@@ -269,3 +269,7 @@ class LogConfig:
     def add_parsers(self, parsers, scope='global'):
         if scope == 'global' and parsers:
             self.global_settings['filters'].extend(parsers)
+
+    def add_meta_filters(self, filters, scope='global'):
+        if scope == 'global' and filters:
+            self.global_settings['meta_filters'].extend(filters)

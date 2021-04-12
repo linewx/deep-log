@@ -7,7 +7,7 @@ install_requires = [
 
 setup(
     name='deep-log',
-    version="0.0.4",
+    version="0.0.6",
     description='log analysis tool',
     license='MIT',
     author='Lu Ganlin',
