@@ -15,13 +15,13 @@ class NameFilter(MetaFilter):
 
     def filter_meta(self, file_name):
         for one_pattern in self.patterns:
-            if fnmatch.fnmatch(file_name.lower(), one_pattern):
+            if fnmatch.fnmatch(file_name, one_pattern):
                 break
         else:
             return False
 
         for one_exclude_pattern in self.exclude_patterns:
-            if fnmatch.fnmatch(file_name.lower(), one_exclude_pattern):
+            if fnmatch.fnmatch(file_name, one_exclude_pattern):
                 return False
 
         return True

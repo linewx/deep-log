@@ -30,7 +30,9 @@ class LogAnalyzer:
         return LogFormatter(format_string)
 
     def analyze(self, dirs=None, modules=(), subscribe=None, order_by=None, analyze=None, log_format=None, limit=None, full=False,
-                reverse=False):
+                reverse=False, name_only=False):
+        if name_only:
+            log_format = '{}'
 
         formmater = self._build_formatter(log_format)
 
@@ -42,7 +44,7 @@ class LogAnalyzer:
         if order_by or analyze:
             streaming_mode = False
 
-        for item in self.miner.mine(dirs, modules=modules, subscribe=subscribe):
+        for item in self.miner.mine(dirs, modules=modules, subscribe=subscribe, name_only=name_only):
             if streaming_mode:
                 print(formmater.format(item))
             else:

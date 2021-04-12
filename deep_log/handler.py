@@ -23,6 +23,9 @@ class ModuleLogHandler(LogHandler):
     def handle(self, one_log_item):
         return one_log_item
 
+# re.search("\n(?P<exception>.*?Exception):(?P<exception_detail>.*)", one_log_item['content']).groupdict()
+class ReLogHandler(LogHandler):
+    pass
 
 class TypeLogHandler(LogHandler):
     def __init__(self, definitions):

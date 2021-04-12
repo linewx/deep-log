@@ -87,7 +87,7 @@ class DeepLogMiner:
         dir = path.abspath(dir)
         return glob.glob(dir)
 
-    def mine(self, target_dirs=None, modules=None, subscribe=False):
+    def mine(self, target_dirs=None, modules=None, subscribe=False, name_only=False):
         if not target_dirs:
             target_dirs = self.config.get_default_paths(modules)
 
@@ -114,7 +114,11 @@ class DeepLogMiner:
         # for internal file filter
         full_paths = self._filter_meta(full_paths)
 
-        if subscribe:
+        if name_only:
+            for one in full_paths:
+                yield one
+
+        elif subscribe:
             for one in self.mining_files(full_paths):
                 yield one
         else:
