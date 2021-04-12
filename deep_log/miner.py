@@ -74,7 +74,7 @@ class DeepLogMiner:
         for file_name in file_name_list:
             meta_filters = self.config.get_meta_filters(file_name)
             for one_filter in meta_filters:
-                if not one_filter.filer_file(file_name):
+                if not one_filter.filter_meta(file_name):
                     break
             else:
                 filtered_list.append(file_name)

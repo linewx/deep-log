@@ -12,6 +12,7 @@ from deep_log import parser
 from deep_log import handler
 
 from deep_log import filter
+from deep_log import meta_filter
 
 
 class Logger:
@@ -250,7 +251,7 @@ class LogConfig:
                 for one_node_filters in node_filters:
                     filter_name = one_node_filters.get('name')
                     filter_params = one_node_filters.get('params') if one_node_filters.get('params') else {}
-                    deep_filter = getattr(filter, filter_name)(**filter_params)
+                    deep_filter = getattr(meta_filter, filter_name)(**filter_params)
                     meta_filters.append(deep_filter)
 
         if 'global' in scope:
