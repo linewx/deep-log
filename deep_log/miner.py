@@ -37,8 +37,8 @@ class DeepLogMiner:
 
     def mine_file(self, fp):
         parsed_results = self._parse_file(fp)
-        parsed_results = self._filter_file(fp, parsed_results)
         parsed_results = self._handle_file(fp, parsed_results)
+        parsed_results = self._filter_file(fp, parsed_results)
         return parsed_results
 
     def mine_files(self, fps):

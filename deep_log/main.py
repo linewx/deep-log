@@ -20,18 +20,20 @@ logging.basicConfig(level=logging.INFO,
 class CmdHelper:
     @staticmethod
     def build_filters(args):
-        file_content_filters = []
+        filters = []
         if not args:
-            return file_content_filters
+            return filters
 
         if args.filter:
-            file_content_filters.append(factory.FilterFactory.create_dsl_filter(args.filter))
+            filters.append(factory.FilterFactory.create_dsl_filter(args.filter))
 
         if args.recent:
-            file_content_filters.append(factory.FilterFactory.create_recent_dsl(args.recent))
+            filters.append(factory.FilterFactory.create_recent_dsl(args.recent))
 
         if args.tags:
-            file_content_filters.append(factory.FilterFactory.create_tags_filter(args.tags))
+            filters.append(factory.FilterFactory.create_tags_filter(args.tags))
+
+        return filters
 
     @staticmethod
     def build_meta_filters(args):
