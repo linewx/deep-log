@@ -1,7 +1,9 @@
 import glob
 import os
 import time
+import traceback
 from os import path
+from multiprocessing import Pool
 
 from deep_log import utils
 
@@ -43,11 +45,10 @@ class DeepLogMiner:
 
     def mine_files(self, fps):
         for fp in fps:
-            file_name = fp.name
             results = self.mine_file(fp)
             if results:
                 for one in results:
-                    yield {'file_name': file_name, **one}
+                    yield one
 
     def mining_files(self, filename_list):
         fps = []
@@ -132,3 +133,61 @@ class DeepLogMiner:
 
             for one in self.mine_files(opened_file_list):
                 yield one
+
+    def _mine_file(self, file_name):
+        try:
+            with open(file_name) as fp:
+                print("mining {}".format(file_name))
+                results = []
+                for one in self.mine_file(fp):
+                    results.append(one)
+
+                print("mining {}".format(file_name))
+                return results
+        except Exception as error:
+            pass
+            #traceback.print_exc()
+
+    def mine_parallel(self, target_dirs=None, modules=None, subscribe=False, name_only=False):
+        if not target_dirs:
+            target_dirs = self.config.get_default_paths(modules)
+
+        full_paths = []
+
+        dirs = []
+        for one_target_dir in target_dirs:
+            dirs.extend(self.normalize_path(one_target_dir))
+
+        for folder in dirs:
+
+            if path.isfile(folder):
+                full_paths.append(folder)
+                continue
+
+            for root, dirs, files in os.walk(folder):
+                for file in files:
+                    full_paths.append(os.path.join(root, file))
+        #
+        # if file_filters:
+        #     for one_file_filter in file_filters:
+        #         full_paths = [one for one in full_paths if one_file_filter.filter(one)]
+
+        # for internal file filter
+        full_paths = self._filter_meta(full_paths)
+
+        if name_only:
+            for one in full_paths:
+                yield one
+
+        elif subscribe:
+            for one in self.mining_files(full_paths):
+                yield one
+        else:
+
+            with Pool(processes=8) as pool:
+                for one in pool.imap_unordered(self._mine_file, full_paths):
+                    try:
+                        for item in one:
+                            yield item
+                    except:
+                        pass

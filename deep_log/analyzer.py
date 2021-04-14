@@ -29,8 +29,9 @@ class LogAnalyzer:
     def _build_formatter(self, format_string=None):
         return LogFormatter(format_string)
 
-    def analyze(self, dirs=None, modules=(), subscribe=None, order_by=None, analyze=None, log_format=None, limit=None, full=False,
-                reverse=False, name_only=False):
+    def analyze(self, dirs=None, modules=(), subscribe=None, order_by=None, analyze=None, log_format=None, limit=None,
+                full=False,
+                reverse=False, name_only=False, parallel=False):
         if name_only:
             log_format = '{}'
 
@@ -43,17 +44,26 @@ class LogAnalyzer:
 
         if order_by or analyze:
             streaming_mode = False
+        if parallel:
+            for item in self.miner.mine_parallel(dirs, modules=modules, subscribe=subscribe, name_only=name_only):
+                if streaming_mode:
+                    print(formmater.format(item))
+                else:
+                    items.append(item)
 
-        for item in self.miner.mine(dirs, modules=modules, subscribe=subscribe, name_only=name_only):
-            if streaming_mode:
-                print(formmater.format(item))
-            else:
-                items.append(item)
+                count = count + 1
+                if limit is not None and count >= limit:
+                    break
+        else:
+            for item in self.miner.mine(dirs, modules=modules, subscribe=subscribe, name_only=name_only):
+                if streaming_mode:
+                    print(formmater.format(item))
+                else:
+                    items.append(item)
 
-            count = count + 1
-            if limit is not None and count >= limit:
-                break
-
+                count = count + 1
+                if limit is not None and count >= limit:
+                    break
         if order_by:
             # order by mode, need shuffle in memory
             items.sort(key=lambda x: x.get(order_by), reverse=reverse)

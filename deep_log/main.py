@@ -82,6 +82,7 @@ class CmdHelper:
         parser.add_argument('--modules', help='query by tags')
         parser.add_argument('--name-only', action='store_true', help='show only file name')
         parser.add_argument('--full', action='store_true', help='display full')
+        parser.add_argument('--parallel', action='store_true', help='run in parallel')
         parser.add_argument('--pass-on-exception', action='store_true', help='default value if met exception ')
         parser.add_argument('-D', action='append', dest='variables', help='definitions')
         parser.add_argument('dirs', metavar='N', nargs='*', help='log dirs to analyze')
@@ -105,7 +106,7 @@ def main():
 
     log_analyzer.analyze(dirs=args.dirs, modules=CmdHelper.build_modules(args), subscribe=args.subscribe, order_by=args.order_by,
                          analyze=args.analyze,
-                         log_format=args.format, limit=args.limit, full=args.full, reverse=args.reverse, name_only=args.name_only)
+                         log_format=args.format, limit=args.limit, full=args.full, reverse=args.reverse, name_only=args.name_only, parallel=args.parallel)
 
 
 if __name__ == '__main__':
