@@ -6,6 +6,8 @@ from copy import copy
 from datetime import datetime
 from os import path
 
+from deep_log.utils import built_function
+
 
 class LogHandler:
     def handle(self, one_log_item):
@@ -102,6 +104,10 @@ class TagLogHandler(LogHandler):
         #   'condition': 'tag_name
         # }
         self.tag_definitions = definitions
+        self._precess_condition()
+
+    def _precess_condition(self):
+        self.tag_definitions = [{"name": one.get("name"), "condition": compile(one.get('condition'), '', 'eval')} for one in self.tag_definitions]
 
     def handle(self, one_log_item):
         tags = one_log_item.get('tags') if 'tags' in one_log_item else set()
