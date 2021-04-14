@@ -8,7 +8,14 @@ from deep_log import filter
 class FilterFactory:
     @staticmethod
     def create_dsl_filter(dsl, pass_on_exception=False):
-        return filter.DslFilter(dsl, pass_on_exception)
+        return {
+            'name': 'DslFilter',
+            'params': {
+                'dsl': dsl,
+                'pass_on_exception': pass_on_exception
+            }
+        }
+        # return filter.DslFilter(dsl, pass_on_exception)
 
     @staticmethod
     def create_recent_dsl(recent):
@@ -32,12 +39,26 @@ class FilterFactory:
             raise Exception("unsupported recent format {}".format(recent))
 
         start_time = datetime.now().timestamp() - recent_seconds
-        return filter.DslFilter(filter_dsl_template.format(start_time))
+
+        return {
+            'name': 'DslFilter',
+            'params': {
+                'dsl': filter_dsl_template.format(start_time)
+            }
+        }
+
+        # return filter.DslFilter(filter_dsl_template.format(start_time))
 
     @staticmethod
     def create_tags_filter(tags):
         target_tags = set(tags.split(','))
-        return filter.DslFilter('tags & {}'.format(str(target_tags)))
+        return {
+            'name': 'DslFilter',
+            'params': {
+                'dsl': 'tags & {}'.format(str(target_tags))
+            }
+        }
+        # return filter.DslFilter('tags & {}'.format(str(target_tags)))
 
 
 class MetaFilterFactory:
@@ -64,12 +85,32 @@ class MetaFilterFactory:
             raise Exception("unsupported recent format {}".format(recent))
 
         start_time = datetime.now().timestamp() - recent_seconds
-        return meta_filter.DslMetaFilter(meta_filter_template.format(start_time))
+        return {
+            'name': 'DslMetaFilter',
+            'params': {
+                'dsl': meta_filter_template.format(start_time)
+            }
+        }
+        # return meta_filter.DslMetaFilter(meta_filter_template.format(start_time))
 
     @staticmethod
-    def create_name_filter(pattern):
-        return meta_filter.NameFilter(pattern)
+    def create_name_filter(patterns='', exclude_patterns=''):
+        # lazy initilze, for code object can't serialized between process
+        return {
+            'name': 'NameFilter',
+            'params': {
+                'patterns': patterns,
+                'exclude_patterns': exclude_patterns
+            }
+        }
+        # return meta_filter.NameFilter(pattern)
 
     @staticmethod
     def create_dsl_filter(dsl):
-        return meta_filter.DslMetaFilter(dsl)
+        return {
+            'Name': 'DslMetaFilter',
+            'params': {
+                'dsl': dsl
+            }
+        }
+        # return meta_filter.DslMetaFilter(dsl)

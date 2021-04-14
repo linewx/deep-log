@@ -220,7 +220,11 @@ class LogConfig:
                     deep_handler = getattr(handler, handler_name)(**handler_params)
                     handlers.append(deep_handler)
         if 'global' in scope:
-            handlers.extend(self.global_settings['handlers'])
+            for one_node_handler in self.global_settings['handlers']:
+                handler_name = one_node_handler.get('name')
+                handler_params = one_node_handler.get('params') if one_node_handler.get('params') else {}
+                deep_handler = getattr(handler, handler_name)(**handler_params)
+                handlers.append(deep_handler)
 
         return handlers
 
@@ -238,7 +242,11 @@ class LogConfig:
                     filters.append(deep_filter)
 
         if 'global' in scope:
-            filters.extend(self.global_settings['filters'])
+            for one_node_filters in self.global_settings['filters']:
+                filter_name = one_node_filters.get('name')
+                filter_params = one_node_filters.get('params') if one_node_filters.get('params') else {}
+                deep_filter = getattr(filter, filter_name)(**filter_params)
+                filters.append(deep_filter)
 
         return filters
 
@@ -255,7 +263,13 @@ class LogConfig:
                     meta_filters.append(deep_filter)
 
         if 'global' in scope:
-            meta_filters.extend(self.global_settings['meta_filters'])
+            for one_global_filters in self.global_settings['meta_filters']:
+                filter_name = one_global_filters.get('name')
+                filter_params = one_global_filters.get('params') if one_global_filters.get('params') else {}
+                deep_filter = getattr(meta_filter, filter_name)(**filter_params)
+                meta_filters.append(deep_filter)
+
+                meta_filters.extend(self.global_settings['meta_filters'])
         return meta_filters
 
     def add_filters(self, filters, scope='global'):

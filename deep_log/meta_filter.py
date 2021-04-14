@@ -31,8 +31,8 @@ class NameFilter(MetaFilter):
 
 
 class DslMetaFilter(MetaFilter):
-    def __init__(self, file_filter):
-        self.file_filter = file_filter
+    def __init__(self, dsl):
+        self.file_filter = dsl
         self.code = compile(self.file_filter, '', 'eval')
 
     def filter_meta(self, filename):
