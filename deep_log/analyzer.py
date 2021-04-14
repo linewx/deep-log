@@ -34,7 +34,7 @@ class LogAnalyzer:
 
     def analyze(self, dirs=None, modules=(), subscribe=None, order_by=None, analyze=None, log_format=None, limit=None,
                 full=False,
-                reverse=False, name_only=False, parallel=False):
+                reverse=False, name_only=False, workers=1):
         if name_only:
             log_format = '{}'
 
@@ -47,8 +47,8 @@ class LogAnalyzer:
 
         if order_by or analyze:
             streaming_mode = False
-        if parallel:
-            for item in self.miner.mine_x(dirs, modules=modules, subscribe=subscribe, name_only=name_only, subscribe_handler=formmater.print):
+        if workers and workers > 1:
+            for item in self.miner.mine_x(dirs, modules=modules, subscribe=subscribe, name_only=name_only, subscribe_handler=formmater.print, workers=workers):
                 if streaming_mode:
                     print(formmater.format(item))
                 else:

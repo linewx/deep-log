@@ -273,3 +273,6 @@ class LogConfig:
     def add_meta_filters(self, filters, scope='global'):
         if scope == 'global' and filters:
             self.global_settings['meta_filters'].extend(filters)
+
+    def get_variable(self, variable):
+        return self.settings.get('variables').get(variable)

@@ -63,6 +63,14 @@ class CmdHelper:
         return variables
 
     @staticmethod
+    def get_argument(args, config, variable):
+        value = getattr(args, variable)
+        if value is None:
+            return config.get_variable(variable)
+        else:
+            return value
+
+    @staticmethod
     def build_args_parser():
         parser = argparse.ArgumentParser()
         parser.add_argument('-f', '--file', help='config file')
@@ -71,11 +79,12 @@ class CmdHelper:
         parser.add_argument('-t', '--file-filter', help='file filters')
         parser.add_argument('-n', '--file-name', help='file name filters')
         parser.add_argument('-u', '--layout', help='return layout')
-        parser.add_argument('-m', '--format', help='print format')
+        parser.add_argument('-m', '--log-format', help='print format')
         parser.add_argument('-s', '--subscribe', action='store_true', help='subscribe mode')
         parser.add_argument('-o', '--order-by', help='field to order by')
         parser.add_argument('-r', '--reverse', action='store_true', help='reverse order, only work with order by')
         parser.add_argument('--limit', type=int, help='limit query count')
+        parser.add_argument('--workers', type=int, help='workers count')
         parser.add_argument('--recent', help='query to recent time')
         parser.add_argument('-y', '--analyze', help='analyze')
         parser.add_argument('--tags', help='query by tags')
@@ -104,9 +113,16 @@ def main():
     log_miner = DeepLogMiner(log_config)
     log_analyzer = LogAnalyzer(log_miner)
 
-    log_analyzer.analyze(dirs=args.dirs, modules=CmdHelper.build_modules(args), subscribe=args.subscribe, order_by=args.order_by,
-                         analyze=args.analyze,
-                         log_format=args.format, limit=args.limit, full=args.full, reverse=args.reverse, name_only=args.name_only, parallel=args.parallel)
+    arguments = ['subscribe', 'order_by', 'analyze', 'log_format', 'limit', 'full', 'reverse', 'name_only', 'workers']
+
+    log_analyzer.analyze(dirs=args.dirs, modules=CmdHelper.build_modules(args),
+                         **{one: CmdHelper.get_argument(args, log_config, one) for one in arguments})
+    # log_analyzer.analyze(dirs=args.dirs, modules=CmdHelper.build_modules(args),
+    #                      subscribe=CmdHelper.get_argument('subscribe'),
+    #                      order_by=CmdHelper.get_argument('order_by'),
+    #                      analyze=CmdHelper.get_argument('analyze'),
+    #                      log_format=args.format, limit=args.limit, full=args.full, reverse=args.reverse,
+    #                      name_only=args.name_only, workers=args.workers)
 
 
 if __name__ == '__main__':
