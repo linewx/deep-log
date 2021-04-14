@@ -1,7 +1,9 @@
 import glob
+import logging
 import os
 import time
 import traceback
+from functools import partial
 from os import path
 from multiprocessing import Pool
 
@@ -37,15 +39,15 @@ class DeepLogMiner:
                 return False
         return True
 
-    def mine_file(self, fp):
+    def mine_opened_file(self, fp):
         parsed_results = self._parse_file(fp)
         parsed_results = self._handle_file(fp, parsed_results)
         parsed_results = self._filter_file(fp, parsed_results)
         return parsed_results
 
-    def mine_files(self, fps):
+    def mine_opened_files(self, fps):
         for fp in fps:
-            results = self.mine_file(fp)
+            results = self.mine_opened_file(fp)
             if results:
                 for one in results:
                     yield one
@@ -56,16 +58,20 @@ class DeepLogMiner:
             try:
                 fp = open(one)
                 fps.append(fp)
-            except:
-                pass
+            except Exception as e:
+                traceback.print_exc()
 
         for fp in fps:
             fp.seek(0, 2)
 
         while True:
-            for one in self.mine_files(fps):
+            for one in self.mine_opened_files(fps):
                 yield one
             time.sleep(0.1)
+
+    def sync_mining_files(self, file_name_list, callback=None):
+        for one in self.mining_files(file_name_list):
+            callback(one)
 
     def _filter_meta(self, file_name_list):
         if not file_name_list:
@@ -131,24 +137,25 @@ class DeepLogMiner:
                 except:
                     pass
 
-            for one in self.mine_files(opened_file_list):
+            for one in self.mine_opened_files(opened_file_list):
                 yield one
 
-    def _mine_file(self, file_name):
+    def mine_file(self, file_name):
         try:
             with open(file_name) as fp:
-                print("mining {}".format(file_name))
+                logging.warning("mining {}".format(file_name))
+                logging.warning("pid {}".format(os.getpid()))
                 results = []
-                for one in self.mine_file(fp):
+                for one in self.mine_opened_file(fp):
                     results.append(one)
 
-                print("mining {}".format(file_name))
+                logging.warning("finished {}".format(file_name))
                 return results
         except Exception as error:
-            pass
-            #traceback.print_exc()
+            logging.error(traceback.format_exc())
 
-    def mine_parallel(self, target_dirs=None, modules=None, subscribe=False, name_only=False):
+    def mine_x(self, target_dirs=None, modules=None, subscribe=False, subscribe_handler=None, name_only=False,
+               workers=8):
         if not target_dirs:
             target_dirs = self.config.get_default_paths(modules)
 
@@ -167,25 +174,30 @@ class DeepLogMiner:
             for root, dirs, files in os.walk(folder):
                 for file in files:
                     full_paths.append(os.path.join(root, file))
-        #
-        # if file_filters:
-        #     for one_file_filter in file_filters:
-        #         full_paths = [one for one in full_paths if one_file_filter.filter(one)]
 
         # for internal file filter
         full_paths = self._filter_meta(full_paths)
 
         if name_only:
+            # only show name only
             for one in full_paths:
                 yield one
 
         elif subscribe:
-            for one in self.mining_files(full_paths):
-                yield one
-        else:
+            # dispatch paths
+            all_paths = [[] for one in range(0, workers)]
+            for one in range(len(full_paths)):
+                the_index = one % workers
+                all_paths[the_index].append(full_paths[one])
 
-            with Pool(processes=8) as pool:
-                for one in pool.imap_unordered(self._mine_file, full_paths):
+            with Pool(processes=workers) as pool:
+
+                for one in pool.imap_unordered(partial(self.sync_mining_files, callback=subscribe_handler), all_paths):
+                    # never end actually
+                    pass
+        else:
+            with Pool(processes=workers) as pool:
+                for one in pool.imap_unordered(self.mine_file, full_paths):
                     try:
                         for item in one:
                             yield item

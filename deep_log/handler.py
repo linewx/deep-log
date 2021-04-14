@@ -97,6 +97,19 @@ class TransformLogHandler(LogHandler):
         return new_one_log_item
 
 
+class RegLogHandler(LogHandler):
+    def __init__(self, pattern):
+        self.pattern = pattern
+
+    def handle(self, one_log_item):
+        new_one_log_item = copy(one_log_item)
+        if self.pattern:
+            matched_result = re.search(self.pattern, new_one_log_item.get('raw'))
+            if matched_result:
+                new_one_log_item.update(matched_result.groupdict())
+        return new_one_log_item
+
+
 class TagLogHandler(LogHandler):
     def __init__(self, definitions):
         # {
@@ -107,7 +120,8 @@ class TagLogHandler(LogHandler):
         self._precess_condition()
 
     def _precess_condition(self):
-        self.tag_definitions = [{"name": one.get("name"), "condition": compile(one.get('condition'), '', 'eval')} for one in self.tag_definitions]
+        self.tag_definitions = [{"name": one.get("name"), "condition": compile(one.get('condition'), '', 'eval')} for
+                                one in self.tag_definitions]
 
     def handle(self, one_log_item):
         tags = one_log_item.get('tags') if 'tags' in one_log_item else set()

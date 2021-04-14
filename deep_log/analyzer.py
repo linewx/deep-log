@@ -21,6 +21,9 @@ class LogFormatter:
         else:
             return self.log_format.format(**{**self.default_values, **content})
 
+    def print(self, content):
+        print(self.format(content))
+
 
 class LogAnalyzer:
     def __init__(self, miner):
@@ -45,7 +48,7 @@ class LogAnalyzer:
         if order_by or analyze:
             streaming_mode = False
         if parallel:
-            for item in self.miner.mine_parallel(dirs, modules=modules, subscribe=subscribe, name_only=name_only):
+            for item in self.miner.mine_x(dirs, modules=modules, subscribe=subscribe, name_only=name_only, subscribe_handler=formmater.print):
                 if streaming_mode:
                     print(formmater.format(item))
                 else:

@@ -14,10 +14,13 @@ class NameFilter(MetaFilter):
         self.exclude_patterns = exclude_patterns.split(',') if exclude_patterns else []
 
     def filter_meta(self, file_name):
+        match_included = False
+        if not self.patterns:
+            match_included = True
         for one_pattern in self.patterns:
             if fnmatch.fnmatch(file_name, one_pattern):
-                break
-        else:
+                match_included = True
+        if not match_included:
             return False
 
         for one_exclude_pattern in self.exclude_patterns:
