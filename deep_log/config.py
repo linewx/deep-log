@@ -269,7 +269,6 @@ class LogConfig:
                 deep_filter = getattr(meta_filter, filter_name)(**filter_params)
                 meta_filters.append(deep_filter)
 
-                meta_filters.extend(self.global_settings['meta_filters'])
         return meta_filters
 
     def add_filters(self, filters, scope='global'):
