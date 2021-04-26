@@ -231,9 +231,10 @@ class LogConfig:
 
         if self.global_settings['template']:
             # use global template instead specified by user
-            merged_logger = self._get_logger_template(self.global_settings['template'])
+            # don't use any definitions in config file
+            return self._get_logger_template(self.global_settings['template'])
 
-        elif 'templates' in one_logger:
+        if 'templates' in one_logger:
             logger_templates = one_logger.get('templates')
             for one_logger_template in logger_templates:
                 self._merge_loggers(merged_logger, self._get_logger_template(one_logger_template))
