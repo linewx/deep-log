@@ -102,7 +102,6 @@ class CmdHelper:
         parser.add_argument('--target', metavar='N', nargs='*', help='log dirs to analyze')
         parser.add_argument('pattern', help='default pattern to analyze')
 
-
         return parser.parse_args()
 
     @staticmethod
@@ -117,6 +116,7 @@ def main():
     log_config = LogConfig(args.file, CmdHelper.build_variables(args))
     log_config.add_filters(CmdHelper.build_filters(args), scope='global')
     log_config.add_meta_filters(CmdHelper.build_meta_filters(args), scope='global')
+    log_config.set_template(args.template, scope='global')
     log_miner = DeepLogMiner(log_config)
     log_analyzer = LogAnalyzer(log_miner)
 
