@@ -86,18 +86,20 @@ class Loggers:
 
 
 class LogConfig:
-    def __init__(self, config_file=None, variables=None, filters=None, handlers=None, parsers=None):
-        self.settings = self._parse_config(config_file, variables)
-
-        self.loggers = self._build_loggers(self.settings)
-
+    def __init__(self, config_file=None, variables=None, filters=None, handlers=None, parsers=None, template=None):
         self.global_settings = {
             'parsers': [],
             'filters': [],
             'handlers': [],
             'meta_filters': [],
-            'template': ''
+            'template': template
         }
+
+        self.settings = self._parse_config(config_file, variables)
+
+        self.loggers = self._build_loggers(self.settings)
+
+
 
     def _get_logger_template(self, name):
         templates = self.settings.get('templates')

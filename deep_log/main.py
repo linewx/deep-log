@@ -83,7 +83,7 @@ class CmdHelper:
         parser.add_argument('-t', '--file-filter', help='file filters')
         parser.add_argument('-n', '--file-name', help='file name filters')
         parser.add_argument('-u', '--layout', help='return layout')
-        parser.add_argument('-m', '--log-format', help='print format')
+        parser.add_argument('-m', '--format', help='print format')
         parser.add_argument('-s', '--subscribe', action='store_true', help='subscribe mode')
         parser.add_argument('-o', '--order-by', help='field to order by')
         parser.add_argument('-r', '--reverse', action='store_true', help='reverse order, only work with order by')
@@ -100,7 +100,7 @@ class CmdHelper:
         parser.add_argument('--pass-on-exception', action='store_true', help='default value if met exception ')
         parser.add_argument('-D', action='append', dest='variables', help='definitions')
         parser.add_argument('--target', metavar='N', nargs='*', help='log dirs to analyze')
-        parser.add_argument('pattern', help='default pattern to analyze')
+        parser.add_argument('pattern', nargs='*', help='default pattern to analyze')
 
         return parser.parse_args()
 
@@ -113,14 +113,14 @@ class CmdHelper:
 
 def main():
     args = CmdHelper.build_args_parser()
-    log_config = LogConfig(args.file, CmdHelper.build_variables(args))
+    log_config = LogConfig(args.file, CmdHelper.build_variables(args), template=args.template)
     log_config.add_filters(CmdHelper.build_filters(args), scope='global')
     log_config.add_meta_filters(CmdHelper.build_meta_filters(args), scope='global')
-    log_config.set_template(args.template, scope='global')
+    # log_config.set_template(args.template, scope='global')
     log_miner = DeepLogMiner(log_config)
     log_analyzer = LogAnalyzer(log_miner)
 
-    arguments = ['subscribe', 'order_by', 'analyze', 'log_format', 'limit', 'full', 'reverse', 'name_only', 'workers']
+    arguments = ['subscribe', 'order_by', 'analyze', 'format', 'limit', 'full', 'reverse', 'name_only', 'workers']
 
     log_analyzer.analyze(dirs=args.target, modules=CmdHelper.build_modules(args),
                          **{one: CmdHelper.get_argument(args, log_config, one) for one in arguments})
