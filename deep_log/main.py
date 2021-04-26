@@ -24,6 +24,10 @@ class CmdHelper:
         if not args:
             return filters
 
+        if args.pattern:
+            filters.append(
+                factory.FilterFactory.create_dsl_filter('\'{}\' in raw'.format(args.pattern), args.pass_on_exception))
+
         if args.filter:
             filters.append(factory.FilterFactory.create_dsl_filter(args.filter, args.pass_on_exception))
 
@@ -88,13 +92,16 @@ class CmdHelper:
         parser.add_argument('--recent', help='query to recent time')
         parser.add_argument('-y', '--analyze', help='analyze')
         parser.add_argument('--tags', help='query by tags')
-        parser.add_argument('--modules', help='query by tags')
+        parser.add_argument('--modules', help='query by modules')
+        parser.add_argument('--template', help='logger template')
         parser.add_argument('--name-only', action='store_true', help='show only file name')
         parser.add_argument('--full', action='store_true', help='display full')
         parser.add_argument('--parallel', action='store_true', help='run in parallel')
         parser.add_argument('--pass-on-exception', action='store_true', help='default value if met exception ')
         parser.add_argument('-D', action='append', dest='variables', help='definitions')
-        parser.add_argument('dirs', metavar='N', nargs='*', help='log dirs to analyze')
+        parser.add_argument('--target', metavar='N', nargs='*', help='log dirs to analyze')
+        parser.add_argument('pattern', help='default pattern to analyze')
+
 
         return parser.parse_args()
 
@@ -115,7 +122,7 @@ def main():
 
     arguments = ['subscribe', 'order_by', 'analyze', 'log_format', 'limit', 'full', 'reverse', 'name_only', 'workers']
 
-    log_analyzer.analyze(dirs=args.dirs, modules=CmdHelper.build_modules(args),
+    log_analyzer.analyze(dirs=args.target, modules=CmdHelper.build_modules(args),
                          **{one: CmdHelper.get_argument(args, log_config, one) for one in arguments})
     # log_analyzer.analyze(dirs=args.dirs, modules=CmdHelper.build_modules(args),
     #                      subscribe=CmdHelper.get_argument('subscribe'),
