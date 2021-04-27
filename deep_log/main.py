@@ -100,7 +100,7 @@ class CmdHelper:
         parser.add_argument('--pass-on-exception', action='store_true', help='default value if met exception ')
         parser.add_argument('-D', action='append', dest='variables', help='definitions')
         parser.add_argument('--target', metavar='N', nargs='*', help='log dirs to analyze')
-        parser.add_argument('pattern', nargs='*', help='default pattern to analyze')
+        parser.add_argument('pattern', nargs='?', help='default pattern to analyze')
 
         return parser.parse_args()
 
