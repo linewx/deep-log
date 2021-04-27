@@ -86,17 +86,64 @@ class Loggers:
 
 
 class LogConfig:
-    def __init__(self, config_file=None, variables=None, filters=None, handlers=None, parsers=None):
-        self.settings = self._parse_config(config_file, variables)
-
-        self.loggers = self._build_loggers(self.settings)
-
+    def __init__(self, config_file=None, variables=None, filters=None, handlers=None, parsers=None, template=None):
         self.global_settings = {
             'parsers': [],
             'filters': [],
             'handlers': [],
-            'meta_filters': []
+            'meta_filters': [],
+            'template': template
         }
+
+        self.settings = self._parse_config(config_file, variables)
+
+        self.loggers = self._build_loggers(self.settings)
+
+
+
+    def _get_logger_template(self, name):
+        templates = self.settings.get('templates')
+        if templates is None:
+            return {}
+        else:
+            for one in templates:
+                if one.get('name') == name:
+                    return one
+
+        return {}
+
+    def _merge_loggers(self, logger1, logger2):
+        if logger1 is None and logger2 is None:
+            return {}
+        if logger1 is None:
+            return logger2
+        if logger2 is None:
+            return logger1
+        return {
+            "parser": self._merge_object(logger1.get('parser'), logger2.get('parser')),
+            "filters": self._merge_array(logger1.get('filters'), logger2.get('filters')),
+            "meta_filters": self._merge_array(logger1.get('meta_filters'), logger2.get('meta_filters')),
+            "handlers": self._merge_array(logger1.get('handlers'), logger2.get('handlers')),
+        }
+
+    def _merge_array(self, array1, array2):
+        if array1 is None and array2 is None:
+            return []
+        if array1 is None:
+            return array2
+        if array2 is None:
+            return array1
+        return [*array1, *array2]
+
+    def _merge_object(self, obj1, obj2):
+        if obj1 is None and obj2 is None:
+            return []
+        if obj1 is None:
+            return obj2
+        if obj2 is None:
+            return obj1
+
+        return obj2
 
     def _parse_config(self, settings_file=None, variables=None, root_parser=None):
         # get settings file
@@ -173,10 +220,28 @@ class LogConfig:
             else:
                 the_path = one_logger.get('path')
                 the_path = the_path.format(**settings.get('variables'))
-                the_node = Logger(the_path, one_logger)
+                the_node = Logger(the_path, self._build_one_logger(one_logger))
                 loggers.insert(the_path, one_logger)
 
         return loggers
+
+    def _build_one_logger(self, one_logger):
+        if not one_logger:
+            return one_logger
+
+        merged_logger = None
+
+        if self.global_settings['template']:
+            # use global template instead specified by user
+            # don't use any definitions in config file
+            return self._get_logger_template(self.global_settings['template'])
+
+        if 'templates' in one_logger:
+            logger_templates = one_logger.get('templates')
+            for one_logger_template in logger_templates:
+                self._merge_loggers(merged_logger, self._get_logger_template(one_logger_template))
+
+        return self._merge_loggers(merged_logger, one_logger)
 
     def get_default_paths(self, modules=None):
         paths = []
@@ -289,3 +354,7 @@ class LogConfig:
 
     def get_variable(self, variable):
         return self.settings.get('variables').get(variable)
+
+    def set_template(self, template, scope='global'):
+        if scope == 'global' and template:
+            self.global_settings['template'] = template
