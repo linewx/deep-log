@@ -1,4 +1,5 @@
 import functools
+import glob
 import os
 import re
 from datetime import datetime
@@ -33,6 +34,11 @@ def make_directory(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
+def normalize_path(dir):
+    dir = path.expanduser(dir)
+    dir = path.expandvars(dir)
+    dir = path.abspath(dir)
+    return glob.glob(dir)
 
 @functools.lru_cache(maxsize=256, typed=True)
 def get_fileinfo(filename):

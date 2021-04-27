@@ -99,16 +99,17 @@ class LogConfig:
 
         self.loggers = self._build_loggers(self.settings)
 
-
-
-    def _get_logger_template(self, name):
+    def _get_logger_template(self, logger_template, variables=None):
         templates = self.settings.get('templates')
-        if templates is None:
-            return {}
-        else:
+
+        if 'name' in logger_template:
             for one in templates:
-                if one.get('name') == name:
+                if one.get('name') == logger_template.get('name'):
                     return one
+        elif 'location' in logger_template:
+            # populate location
+            os.path.dirname(utils.normalize_path(self._get_config_file()))
+            the_location = utils.normalize_path(logger_template.get('location'))
 
         return {}
 
@@ -206,6 +207,9 @@ class LogConfig:
 
         return settings
 
+    def _get_config_file(self, config_file):
+        return config_file if config_file else '~/.deep_log/settings.yaml'
+
     def _build_loggers(self, settings):
         loggers_section = settings.get('loggers')
 
@@ -220,8 +224,8 @@ class LogConfig:
             else:
                 the_path = one_logger.get('path')
                 the_path = the_path.format(**settings.get('variables'))
-                the_node = Logger(the_path, self._build_one_logger(one_logger))
-                loggers.insert(the_path, one_logger)
+                # the_node = Logger(the_path, self._build_one_logger(one_logger))
+                loggers.insert(the_path, self._build_one_logger(one_logger))
 
         return loggers
 
@@ -239,7 +243,7 @@ class LogConfig:
         if 'templates' in one_logger:
             logger_templates = one_logger.get('templates')
             for one_logger_template in logger_templates:
-                self._merge_loggers(merged_logger, self._get_logger_template(one_logger_template))
+                merged_logger = self._merge_loggers(merged_logger, self._get_logger_template(one_logger_template))
 
         return self._merge_loggers(merged_logger, one_logger)
 
