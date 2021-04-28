@@ -13,7 +13,7 @@ from deep_log import handler
 
 from deep_log import filter
 from deep_log import meta_filter
-
+import yaml
 
 class Logger:
     def __init__(self, name, children=None, value=None):
@@ -87,6 +87,7 @@ class Loggers:
 
 class LogConfig:
     def __init__(self, config_file=None, variables=None, filters=None, handlers=None, parsers=None, template=None):
+        self.config_file = config_file
         self.global_settings = {
             'parsers': [],
             'filters': [],
@@ -108,8 +109,10 @@ class LogConfig:
                     return one
         elif 'location' in logger_template:
             # populate location
-            os.path.dirname(utils.normalize_path(self._get_config_file()))
-            the_location = utils.normalize_path(logger_template.get('location'))
+            config_dir = os.path.dirname(utils.normalize_path(self._get_config_file()))
+            template_file = utils.normalize_path(os.path.join(config_dir, logger_template.get('location')))
+            with open(template_file) as f:
+                return yaml.safe_load(f)
 
         return {}
 
@@ -182,7 +185,6 @@ class LogConfig:
         # populate settings
         settings = None
         if the_settings_file.endswith('yaml'):
-            import yaml
             with open(the_settings_file) as f:
                 settings = yaml.safe_load(f)
         else:
@@ -207,8 +209,8 @@ class LogConfig:
 
         return settings
 
-    def _get_config_file(self, config_file):
-        return config_file if config_file else '~/.deep_log/settings.yaml'
+    def _get_config_file(self):
+        return self.config_file if self.config_file else '~/.deep_log/settings.yaml'
 
     def _build_loggers(self, settings):
         loggers_section = settings.get('loggers')
