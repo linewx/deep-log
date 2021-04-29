@@ -1,3 +1,4 @@
+import logging
 from string import Formatter
 
 
@@ -57,6 +58,8 @@ class LogAnalyzer:
                 count = count + 1
                 if limit is not None and count >= limit:
                     break
+            else:
+                logging.warning('finish all')
         else:
             for item in self.miner.mine(dirs, modules=modules, subscribe=subscribe, name_only=name_only):
                 if streaming_mode:
