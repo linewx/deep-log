@@ -94,6 +94,7 @@ class CmdHelper:
         parser.add_argument('--tags', help='query by tags')
         parser.add_argument('--modules', help='query by modules')
         parser.add_argument('--template', help='logger template')
+        parser.add_argument('--template_dir', help='logger template dir')
         parser.add_argument('--name-only', action='store_true', help='show only file name')
         parser.add_argument('--full', action='store_true', help='display full')
         parser.add_argument('--parallel', action='store_true', help='run in parallel')
@@ -113,7 +114,8 @@ class CmdHelper:
 
 def main():
     args = CmdHelper.build_args_parser()
-    log_config = LogConfig(args.file, CmdHelper.build_variables(args), template=args.template)
+    log_config = LogConfig(args.file, CmdHelper.build_variables(args), custom_template_name=args.template,
+                           custom_template_dir=args.template_dir)
     log_config.add_filters(CmdHelper.build_filters(args), scope='global')
     log_config.add_meta_filters(CmdHelper.build_meta_filters(args), scope='global')
     # log_config.set_template(args.template, scope='global')

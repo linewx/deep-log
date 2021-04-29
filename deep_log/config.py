@@ -15,6 +15,7 @@ from deep_log import filter
 from deep_log import meta_filter
 import yaml
 
+
 class Logger:
     def __init__(self, name, children=None, value=None):
         self.name = name
@@ -85,36 +86,61 @@ class Loggers:
         return current_value
 
 
+class TemplateRepo:
+    def __init__(self, template_dir=None):
+        self.template_repo = {}
+        for one in os.listdir(template_dir):
+            template_file = os.path.join(template_dir, one)
+            with open(template_file) as f:
+                one_template = yaml.safe_load(f)
+                if 'name' in one_template:
+                    self.template_repo[one_template.get('name')] = one_template
+
+    def get_template(self, template_name):
+        return self.template_repo.get(template_name)
+
+
 class LogConfig:
-    def __init__(self, config_file=None, variables=None, filters=None, handlers=None, parsers=None, template=None):
-        self.config_file = config_file
+    def __init__(self, config_root=None, custom_variables=None, custom_template_name=None, custom_template_dir=None):
+        self.config_root = config_root if config_root else utils.normalize_path('~/.deep_log')
         self.global_settings = {
             'parsers': [],
             'filters': [],
             'handlers': [],
-            'meta_filters': [],
-            'template': template
+            'meta_filters': []
         }
 
-        self.settings = self._parse_config(config_file, variables)
+        # load settings
+        settings = self._load_config(config_root)
+        self.populate_vars(settings, custom_variables)
+        self.populate_paths(settings)
 
-        self.loggers = self._build_loggers(self.settings)
+        template_repo = TemplateRepo(os.path.join(self.config_root, 'templates'))
+        self.populate_templates(settings, template_repo, custom_template_name, custom_template_dir)
+        # populate variable
 
-    def _get_logger_template(self, logger_template, variables=None):
-        templates = self.settings.get('templates')
+        # populate template
+        # self.settings = self._parse_config(config_file, variables)
 
-        if 'name' in logger_template:
-            for one in templates:
-                if one.get('name') == logger_template.get('name'):
-                    return one
-        elif 'location' in logger_template:
-            # populate location
-            config_dir = os.path.dirname(utils.normalize_path(self._get_config_file()))
-            template_file = utils.normalize_path(os.path.join(config_dir, logger_template.get('location')))
-            with open(template_file) as f:
-                return yaml.safe_load(f)
+        self.loggers = self._build_loggers(settings)
 
-        return {}
+        self.settings = settings
+        #
+        # def _get_logger_template(self, logger_template, variables=None):
+        #     templates = self.settings.get('templates')
+        #
+        #     if 'name' in logger_template:
+        #         for one in templates:
+        #             if one.get('name') == logger_template.get('name'):
+        #                 return one
+        #     elif 'location' in logger_template:
+        #         # populate location
+        #         config_dir = os.path.dirname(utils.normalize_path(self._get_config_file()))
+        #         template_file = utils.normalize_path(os.path.join(config_dir, logger_template.get('location')))
+        #         with open(template_file) as f:
+        #             return yaml.safe_loa_get_logger_templated(f)
+
+        # return {}
 
     def _merge_loggers(self, logger1, logger2):
         if logger1 is None and logger2 is None:
@@ -149,68 +175,88 @@ class LogConfig:
 
         return obj2
 
-    def _parse_config(self, settings_file=None, variables=None, root_parser=None):
-        # get settings file
-        the_settings_file = None
-        if settings_file is not None:
-            the_settings_file = settings_file
-        else:
-            config_dir = path.expanduser("~/.deep_log")
-            utils.make_directory(config_dir)  # ensure config file exists
+    def _load_config(self, settings_file=None, variables=None, root_parser=None):
+        if not os.path.exists(self._get_config_file()):
+            raise Exception('config file not found')
 
-            # settings.yaml first
-            default_yaml_settings = os.path.join(config_dir, "settings.yaml")
-            if os.path.exists(default_yaml_settings):
-                the_settings_file = default_yaml_settings
-            else:
-                # settings.json secondly
-                default_json_settings = os.path.join(config_dir, "settings.json")
+        with open(self._get_config_file()) as f:
+            return yaml.safe_load(f)
 
-                if os.path.exists(default_json_settings):
-                    the_settings_file = default_json_settings
-                else:
-                    default_settings = {
-                        "common": {},
-                        "variables": {},
-                        "root": {
-                            "path": "/"
-                        },
-                        "loggers": []
-                    }
-                    with open(default_json_settings, "w") as f:
-                        json.dump(default_settings, f)
-
-                    the_settings_file = default_json_settings
-
-        # populate settings
-        settings = None
-        if the_settings_file.endswith('yaml'):
-            with open(the_settings_file) as f:
-                settings = yaml.safe_load(f)
-        else:
-            with open(the_settings_file) as f:
-                settings = json.load(f)
+    def populate_vars(self, settings, variables):
         if variables:
             settings.get('variables').update(variables)
 
         # populate variables
         settings.get('variables').update(utils.evaluate_variables(variables, depth=5))
 
-        # update root parser
-        if root_parser:
-            settings.get('root')['parser'] = {'name': 'DefaultLogParser', 'params': {'pattern': root_parser}}
-
-        # update path
-        settings.get("root")['path'] = settings.get("root").get('path').format(**settings.get('variables'))
-
-        # update logger paths
+    def populate_paths(self, settings):
+        # populate loggers paths
         for one_logger in settings.get('loggers'):
             one_logger['path'] = one_logger.get('path').format(**settings.get('variables'))
+        return settings
 
+    def populate_templates(self, settings, template_repo=None, custom_template=None, custom_template_dir=None):
+        # populate root template
+        root_logger = settings.get('root')
+        if custom_template:
+            # use custom template to populate
+            merged_logger = self._merge_loggers(template_repo.get_template(custom_template), root_logger)
+            root_logger.update(merged_logger)
+
+        elif custom_template_dir:
+            # use custom template dir to populate
+            template_content = {}
+            with open(utils.normalize_path(custom_template_dir)) as f:
+                template_content = yaml.safe_load(f)
+            merged_logger = self._merge_loggers(template_content, root_logger)
+            root_logger.update(merged_logger)
+
+        elif 'template' in root_logger:
+            logger_template_name = root_logger.get('template')
+            merged_logger = self._merge_loggers(template_repo.get_template(logger_template_name), root_logger)
+            root_logger.update(merged_logger)
+        elif 'template_dir' in root_logger:
+            logger_template_dir = os.path.join(self.config_root, root_logger.get('template_dir'))
+            template_content = {}
+            with open(logger_template_dir) as f:
+                template_content = yaml.safe_load(f)
+            merged_logger = self._merge_loggers(template_content, root_logger)
+            root_logger.update(merged_logger)
+
+        # populate logger template
+        for one_logger in settings.get('loggers'):
+            merged_logger = {}
+            if custom_template:
+                # use custom template to populate
+                merged_logger = self._merge_loggers(template_repo.get_template(custom_template), one_logger)
+                one_logger.update(merged_logger)
+
+            if custom_template_dir:
+                # use custom template dir to populate
+                template_content = {}
+                with open(utils.normalize_path(custom_template_dir)) as f:
+                    template_content = yaml.safe_load(f)
+                merged_logger = self._merge_loggers(template_content, one_logger)
+                one_logger.update(merged_logger)
+
+            elif 'template' in one_logger:
+                logger_template_name = one_logger.get('template')
+                merged_logger = self._merge_loggers(template_repo.get_template(logger_template_name), one_logger)
+                one_logger.update(merged_logger)
+            elif 'template_dir' in one_logger:
+                logger_template_dir = os.path.join(self.config_root, one_logger.get('template_dir'))
+                template_content = {}
+                with open(logger_template_dir) as f:
+                    template_content = yaml.safe_load(f)
+                merged_logger = self._merge_loggers(template_content, one_logger)
+                one_logger.update(merged_logger)
         return settings
 
     def _get_config_file(self):
-        return self.config_file if self.config_file else '~/.deep_log/settings.yaml'
+        if self.config_root:
+            return utils.normalize_path(os.path.join(self.config_root, 'config.yaml'))
+        else:
+            return utils.normalize_path('~/.deep_log/config.yaml')
 
     def _build_loggers(self, settings):
         loggers_section = settings.get('loggers')
@@ -225,29 +271,26 @@ class LogConfig:
                 logging.warning("config %(key)s ignore, because no path defined" % locals())
             else:
                 the_path = one_logger.get('path')
-                the_path = the_path.format(**settings.get('variables'))
-                # the_node = Logger(the_path, self._build_one_logger(one_logger))
-                loggers.insert(the_path, self._build_one_logger(one_logger))
+                loggers.insert(the_path, one_logger)
 
         return loggers
 
-    def _build_one_logger(self, one_logger):
-        if not one_logger:
-            return one_logger
-
-        merged_logger = None
-
-        if self.global_settings['template']:
-            # use global template instead specified by user
-            # don't use any definitions in config file
-            return self._get_logger_template(self.global_settings['template'])
-
-        if 'templates' in one_logger:
-            logger_templates = one_logger.get('templates')
-            for one_logger_template in logger_templates:
-                merged_logger = self._merge_loggers(merged_logger, self._get_logger_template(one_logger_template))
-
-        return self._merge_loggers(merged_logger, one_logger)
+    # def _build_one_logger(self, one_logger):
+    #     if not one_logger:
+    #         return one_logger
+    #
+    #     merged_logger = None
+    #
+    #     if self.global_settings['template']:
+    #         # use global template instead specified by user
+    #         # don't use any definitions in config file
+    #         return self._get_logger_template(self.global_settings['template'])
+    #
+    #     if 'template' in one_logger:
+    #         logger_template_name = one_logger.get('template')
+    #         merged_logger = self._merge_loggers(merged_logger, self._get_logger_template(logger_template_name))
+    #
+    #     return self._merge_loggers(merged_logger, one_logger)
 
     def get_default_paths(self, modules=None):
         paths = []

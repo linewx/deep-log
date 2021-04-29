@@ -1,3 +1,6 @@
+import copy
+
+
 class LogFilter:
     def filter(self, one_log_item):
         return True
@@ -19,7 +22,8 @@ class DslFilter(LogFilter):
     def filter(self, one_log_item):
         try:
             if self.dsl:
-                return eval(self.dsl, one_log_item)
+                clone_item = copy.deepcopy(one_log_item)
+                return eval(self.dsl, clone_item)
             else:
                 return True
         except:
