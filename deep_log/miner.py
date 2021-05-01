@@ -52,6 +52,18 @@ class DeepLogMiner:
                 for one in results:
                     yield one
 
+    def mine_files(self, full_paths):
+        opened_file_list = []
+        for one in full_paths:
+            try:
+                fp = open(one)
+                opened_file_list.append(fp)
+            except Exception as e:
+                logging.error("failed to process file {}" % one, e)
+
+        for one in self.mine_opened_files(opened_file_list):
+            yield one
+
     def mining_files(self, filename_list):
         fps = []
         for one in filename_list:
@@ -88,21 +100,13 @@ class DeepLogMiner:
 
         return filtered_list
 
-    def normalize_path(self, dir):
-        dir = path.expanduser(dir)
-        dir = path.expandvars(dir)
-        dir = path.abspath(dir)
-        return glob.glob(dir)
-
-    def mine(self, target_dirs=None, modules=None, subscribe=False, name_only=False):
-        if not target_dirs:
-            target_dirs = self.config.get_default_paths(modules)
+    def _get_target_files(self, target_dirs=None, modules=None):
+        target_dirs = target_dirs if not target_dirs else self.config.get_default_paths(modules)
 
         full_paths = []
-
         dirs = []
         for one_target_dir in target_dirs:
-            dirs.extend(self.normalize_path(one_target_dir))
+            dirs.extend(utils.normalize_path(one_target_dir, True))
 
         for folder in dirs:
 
@@ -113,13 +117,12 @@ class DeepLogMiner:
             for root, dirs, files in os.walk(folder):
                 for file in files:
                     full_paths.append(os.path.join(root, file))
-        #
-        # if file_filters:
-        #     for one_file_filter in file_filters:
-        #         full_paths = [one for one in full_paths if one_file_filter.filter(one)]
 
-        # for internal file filter
         full_paths = self._filter_meta(full_paths)
+        return full_paths
+
+    def mine(self, target_dirs=None, modules=None, subscribe=False, name_only=False):
+        full_paths = self._get_target_files(target_dirs, modules)
 
         if name_only:
             for one in full_paths:
@@ -129,15 +132,7 @@ class DeepLogMiner:
             for one in self.mining_files(full_paths):
                 yield one
         else:
-            opened_file_list = []
-            for one in full_paths:
-                try:
-                    fp = open(one)
-                    opened_file_list.append(fp)
-                except:
-                    pass
-
-            for one in self.mine_opened_files(opened_file_list):
+            for one in self.mine_files(full_paths):
                 yield one
 
     def mine_file(self, file_name):
@@ -156,27 +151,7 @@ class DeepLogMiner:
 
     def mine_x(self, target_dirs=None, modules=None, subscribe=False, subscribe_handler=None, name_only=False,
                workers=8):
-        if not target_dirs:
-            target_dirs = self.config.get_default_paths(modules)
-
-        full_paths = []
-
-        dirs = []
-        for one_target_dir in target_dirs:
-            dirs.extend(self.normalize_path(one_target_dir))
-
-        for folder in dirs:
-
-            if path.isfile(folder):
-                full_paths.append(folder)
-                continue
-
-            for root, dirs, files in os.walk(folder):
-                for file in files:
-                    full_paths.append(os.path.join(root, file))
-
-        # for internal file filter
-        full_paths = self._filter_meta(full_paths)
+        full_paths = self._get_target_files(target_dirs, modules)
 
         if name_only:
             # only show name only

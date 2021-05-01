@@ -34,11 +34,17 @@ def make_directory(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
-def normalize_path(dir):
+
+def normalize_path(dir, with_wildcard=False):
     dir = path.expanduser(dir)
     dir = path.expandvars(dir)
     dir = path.abspath(dir)
-    return dir
+
+    if with_wildcard:
+        return glob.glob(dir)
+    else:
+        return dir
+
 
 @functools.lru_cache(maxsize=256, typed=True)
 def get_fileinfo(filename):
@@ -63,6 +69,3 @@ def get_fileinfo(filename):
             'name': filename,
             'exists': False
         }
-
-
-
