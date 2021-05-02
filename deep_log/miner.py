@@ -100,8 +100,8 @@ class DeepLogMiner:
 
         return filtered_list
 
-    def _get_target_files(self, target_dirs=None, modules=None):
-        target_dirs = target_dirs if not target_dirs else self.config.get_default_paths(modules)
+    def get_target_files(self, target_dirs=None, modules=None):
+        target_dirs = self.config.get_default_paths(modules) if not target_dirs else target_dirs
 
         full_paths = []
         dirs = []
@@ -122,7 +122,7 @@ class DeepLogMiner:
         return full_paths
 
     def mine(self, target_dirs=None, modules=None, subscribe=False, name_only=False):
-        full_paths = self._get_target_files(target_dirs, modules)
+        full_paths = self.get_target_files(target_dirs, modules)
 
         if name_only:
             for one in full_paths:
@@ -151,7 +151,7 @@ class DeepLogMiner:
 
     def mine_x(self, target_dirs=None, modules=None, subscribe=False, subscribe_handler=None, name_only=False,
                workers=8):
-        full_paths = self._get_target_files(target_dirs, modules)
+        full_paths = self.get_target_files(target_dirs, modules)
 
         if name_only:
             # only show name only

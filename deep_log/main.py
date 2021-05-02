@@ -9,6 +9,7 @@ from deep_log.miner import DeepLogMiner
 
 # back pressure
 # https://pyformat.info/
+from deep_log.runner import LogRunner
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
@@ -124,14 +125,12 @@ def main():
 
     arguments = ['subscribe', 'order_by', 'analyze', 'format', 'limit', 'full', 'reverse', 'name_only', 'workers']
 
-    log_analyzer.analyze(dirs=args.target, modules=CmdHelper.build_modules(args),
-                         **{one: CmdHelper.get_argument(args, log_config, one) for one in arguments})
-    # log_analyzer.analyze(dirs=args.dirs, modules=CmdHelper.build_modules(args),
-    #                      subscribe=CmdHelper.get_argument('subscribe'),
-    #                      order_by=CmdHelper.get_argument('order_by'),
-    #                      analyze=CmdHelper.get_argument('analyze'),
-    #                      log_format=args.format, limit=args.limit, full=args.full, reverse=args.reverse,
-    #                      name_only=args.name_only, workers=args.workers)
+    # log_analyzer.analyze(dirs=args.target, modules=CmdHelper.build_modules(args),
+    #                      **{one: CmdHelper.get_argument(args, log_config, one) for one in arguments})
+    #
+    runner = LogRunner(log_miner, log_analyzer, targets=args.target,
+                       **{one: CmdHelper.get_argument(args, log_config, one) for one in arguments})
+    runner.run()
 
 
 if __name__ == '__main__':
