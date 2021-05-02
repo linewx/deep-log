@@ -48,6 +48,8 @@ class LogAnalyzer:
             import pandas as pd
             data = pd.DataFrame(content)
             return eval(self.analyze_dsl, {'data': data})
+        else:
+            return content
 
     def analyze1(self, dirs=None, modules=(), subscribe=None, order_by=None, analyze=None, format=None, limit=None,
                  full=False,

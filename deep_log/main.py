@@ -10,7 +10,7 @@ from deep_log.miner import DeepLogMiner
 # back pressure
 # https://pyformat.info/
 from deep_log.record_writer import LogRecordWriterFactory
-from deep_log.runner import LogRunner
+from deep_log.engine import LogEngine
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
@@ -133,7 +133,7 @@ def main():
     # log_analyzer.analyze(dirs=args.target, modules=CmdHelper.build_modules(args),
     #                      **{one: CmdHelper.get_argument(args, log_config, one) for one in arguments})
     #
-    runner = LogRunner(log_miner, log_analyzer, log_record_writer, targets=args.target,
+    runner = LogEngine(log_miner, log_analyzer, log_record_writer, targets=args.target,
                        **{one: CmdHelper.get_argument(args, log_config, one) for one in arguments})
     runner.run()
 

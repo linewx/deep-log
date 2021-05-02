@@ -1,12 +1,13 @@
 import os
+import sys
 import time
 from functools import partial
 import multiprocessing as mp
 
 
-class LogRunner:
+class LogEngine:
     def __init__(self, log_miner, log_analyzer, log_writer, targets=None, modules=None, workers=None, name_only=False,
-                 subscribe=False, limit=None, distinct=None):
+                 subscribe=False, limit=None, distinct=None, window=None, time_window=None):
         # rguments = ['subscribe', 'order_by', 'analyze', 'format', 'limit', 'full', 'reverse', 'name_only', 'workers']
         self.log_miner = log_miner  # mapper
         self.log_analyzer = log_analyzer  # reducer
@@ -18,6 +19,18 @@ class LogRunner:
         self.subscribe = subscribe
         self.limit = limit
         self.distinct = distinct.split(',') if distinct else []
+
+        if window is not None:
+            self.window = window
+        else:
+            if self.log_analyzer.need_reduce():
+                # max windows size
+                self.window = sys.maxsize
+            else:
+                self.window = 1
+
+        # for future usage
+        self.time_window = time_window if not time_window else 0
 
     def mine_files(self, files):
         if isinstance(files, str):
@@ -35,11 +48,13 @@ class LogRunner:
 
         need_reduce = self.log_analyzer.need_reduce()
 
-        counter = 0
+        total_counter = 0
+        batch_counter = 0
         existing_records = set()
-        mapped_results = []
+        batch_results = []
+
         for one in self.execute():
-            if self.limit and counter >= self.limit:
+            if self.limit and total_counter >= self.limit:
                 break
 
             if self.distinct:
@@ -49,21 +64,24 @@ class LogRunner:
                 else:
                     existing_records.add(the_distinct_values)
 
-            if not need_reduce:
-                # print out directly
-                self.log_writer.write(one)
-            else:
-                # for future reducer
-                mapped_results.append(one)
-            counter = counter + 1
+            # accumulate records
+            total_counter = total_counter + 1
+            batch_counter = batch_counter + 1
+            batch_results.append(one)
 
-        if need_reduce:
-            analyzed_results = self.log_analyzer.analyze(mapped_results)
-            self.log_writer.write(analyzed_results)
-        #
-        # self.log_writer(self.execute())
-        # else:
-        #     self.log_writer
+            if batch_counter == self.window:
+                # hit window size then flush windows
+
+                self.log_writer.write(self.log_analyzer.analyze(batch_results))
+                # reset
+                batch_counter = 0
+                batch_results.clear()
+
+
+
+        else:
+            # flush content
+            self.log_writer.write(self.log_analyzer.analyze(batch_results))
 
     def execute(self):
         if self.subscribe:
