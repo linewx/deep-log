@@ -90,6 +90,7 @@ class CmdHelper:
         parser.add_argument('-o', '--order-by', help='field to order by')
         parser.add_argument('-r', '--reverse', action='store_true', help='reverse order, only work with order by')
         parser.add_argument('--limit', type=int, help='limit query count')
+        parser.add_argument('--window', type=int, help='processing window size')
         parser.add_argument('--workers', type=int, help='workers count')
         parser.add_argument('--recent', help='query to recent time')
         parser.add_argument('-y', '--analyze', help='analyze')
@@ -101,6 +102,7 @@ class CmdHelper:
         parser.add_argument('--name-only', action='store_true', help='show only file name')
         parser.add_argument('--full', action='store_true', help='display full')
         parser.add_argument('--parallel', action='store_true', help='run in parallel')
+        parser.add_argument('--include-history', action='store_true', help='subscribe history or nor')
         parser.add_argument('--pass-on-exception', action='store_true', help='default value if met exception ')
         parser.add_argument('-D', action='append', dest='variables', help='definitions')
         parser.add_argument('--target', metavar='N', nargs='*', help='log dirs to analyze')
@@ -128,7 +130,7 @@ def main():
 
     log_record_writer = LogRecordWriterFactory.create(args.format, args.full)
 
-    arguments = ['subscribe',  'limit',  'name_only', 'workers', 'modules', 'distinct']
+    arguments = ['subscribe',  'limit',  'name_only', 'workers', 'modules', 'distinct', 'include_history', 'window']
 
     # log_analyzer.analyze(dirs=args.target, modules=CmdHelper.build_modules(args),
     #                      **{one: CmdHelper.get_argument(args, log_config, one) for one in arguments})

@@ -7,7 +7,7 @@ import multiprocessing as mp
 
 class LogEngine:
     def __init__(self, log_miner, log_analyzer, log_writer, targets=None, modules=None, workers=None, name_only=False,
-                 subscribe=False, limit=None, distinct=None, window=None, time_window=None):
+                 subscribe=False, limit=None, distinct=None, window=None, time_window=None, include_history=None):
         # rguments = ['subscribe', 'order_by', 'analyze', 'format', 'limit', 'full', 'reverse', 'name_only', 'workers']
         self.log_miner = log_miner  # mapper
         self.log_analyzer = log_analyzer  # reducer
@@ -19,6 +19,7 @@ class LogEngine:
         self.subscribe = subscribe
         self.limit = limit
         self.distinct = distinct.split(',') if distinct else []
+        self.include_history = include_history
 
         if window is not None:
             self.window = window
@@ -38,7 +39,7 @@ class LogEngine:
         return list(self.log_miner.mine_files(files))
 
     def mining_files(self, files, queue):
-        for one in self.log_miner.mining_files(files):
+        for one in self.log_miner.mining_files(files, self.include_history):
             queue.put(one)
 
     def run(self):

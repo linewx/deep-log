@@ -59,12 +59,12 @@ class DeepLogMiner:
                 fp = open(one)
                 opened_file_list.append(fp)
             except Exception as e:
-                logging.error("failed to process file {}" % one, e)
+                logging.error("failed to process file {}".format(one))
 
         for one in self.mine_opened_files(opened_file_list):
             yield one
 
-    def mining_files(self, filename_list):
+    def mining_files(self, filename_list, include_history=False):
         fps = []
         for one in filename_list:
             try:
@@ -73,8 +73,9 @@ class DeepLogMiner:
             except Exception as e:
                 traceback.print_exc()
 
-        for fp in fps:
-            fp.seek(0, 2)
+        if not include_history:
+            for fp in fps:
+                fp.seek(0, 2)
 
         while True:
             for one in self.mine_opened_files(fps):
@@ -121,7 +122,7 @@ class DeepLogMiner:
         full_paths = self._filter_meta(full_paths)
         return full_paths
 
-    def mine(self, target_dirs=None, modules=None, subscribe=False, name_only=False):
+    def mine(self, target_dirs=None, modules=None, subscribe=False, name_only=False, include_history=False):
         full_paths = self.get_target_files(target_dirs, modules)
 
         if name_only:
@@ -129,7 +130,7 @@ class DeepLogMiner:
                 yield one
 
         elif subscribe:
-            for one in self.mining_files(full_paths):
+            for one in self.mining_files(full_paths, include_history):
                 yield one
         else:
             for one in self.mine_files(full_paths):
