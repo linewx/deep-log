@@ -15,7 +15,7 @@ class LogEngine:
         self.targets = targets
         self.modules = modules
         self.name_only = name_only
-        self.workers = workers
+        self.workers = workers if workers else os.cpu_count()
         self.subscribe = subscribe
         self.limit = limit
         self.distinct = distinct.split(',') if distinct else []

@@ -82,10 +82,6 @@ class DeepLogMiner:
                 yield one
             time.sleep(0.1)
 
-    def sync_mining_files(self, file_name_list, callback=None):
-        for one in self.mining_files(file_name_list):
-            callback(one)
-
     def _filter_meta(self, file_name_list):
         if not file_name_list:
             return file_name_list
@@ -135,47 +131,3 @@ class DeepLogMiner:
         else:
             for one in self.mine_files(full_paths):
                 yield one
-
-    def mine_file(self, file_name):
-        try:
-            with open(file_name) as fp:
-                logging.warning("mining {}".format(file_name))
-                logging.warning("pid {}".format(os.getpid()))
-                results = []
-                for one in self.mine_opened_file(fp):
-                    results.append(one)
-
-                logging.warning("finished {}".format(file_name))
-                return results
-        except Exception as error:
-            logging.error(traceback.format_exc())
-
-    def mine_x(self, target_dirs=None, modules=None, subscribe=False, subscribe_handler=None, name_only=False,
-               workers=8):
-        full_paths = self.get_target_files(target_dirs, modules)
-
-        if name_only:
-            # only show name only
-            for one in full_paths:
-                yield one
-
-        elif subscribe:
-            # dispatch paths
-            all_paths = [[] for one in range(0, workers)]
-            for one in range(len(full_paths)):
-                the_index = one % workers
-                all_paths[the_index].append(full_paths[one])
-
-            with Pool(processes=workers) as pool:
-
-                for one in pool.imap_unordered(partial(self.sync_mining_files, callback=subscribe_handler), all_paths):
-                    # never end actually
-                    pass
-        else:
-            with Pool(processes=workers) as pool:
-                for one in pool.imap_unordered(self.mine_file, full_paths):
-                    try:
-                        for item in one:
-                            yield item
-                    except:
-                        pass
