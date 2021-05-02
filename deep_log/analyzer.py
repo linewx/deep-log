@@ -27,15 +27,31 @@ class LogFormatter:
 
 
 class LogAnalyzer:
-    def __init__(self, miner):
-        self.miner = miner
+    def __init__(self, order_by=None, analyze=None, reverse=None):
+        self.order_by = order_by
+        self.reverse = reverse
+        self.analyze_dsl = analyze if analyze else None
 
-    def _build_formatter(self, format_string=None):
-        return LogFormatter(format_string)
+    def need_reduce(self):
+        return self.order_by or self.analyze_dsl
 
-    def analyze(self, dirs=None, modules=(), subscribe=None, order_by=None, analyze=None, format=None, limit=None,
-                full=False,
-                reverse=False, name_only=False, workers=1):
+    # def _build_formatter(self, format_string=None):
+    #     return LogFormatter(format_string)
+
+    def analyze(self, content):
+        if self.order_by:
+            # order by mode, need shuffle in memory
+            content.sort(key=lambda x: x.get(self.order_by), reverse=self.reverse)
+            return content
+
+        elif self.analyze_dsl:
+            import pandas as pd
+            data = pd.DataFrame(content)
+            return eval(self.analyze_dsl, {'data': data})
+
+    def analyze1(self, dirs=None, modules=(), subscribe=None, order_by=None, analyze=None, format=None, limit=None,
+                 full=False,
+                 reverse=False, name_only=False, workers=1):
         if name_only:
             format = '{}'
 
@@ -49,7 +65,8 @@ class LogAnalyzer:
         if order_by or analyze:
             streaming_mode = False
         if workers and workers > 1:
-            for item in self.miner.mine_x(dirs, modules=modules, subscribe=subscribe, name_only=name_only, subscribe_handler=formmater.print, workers=workers):
+            for item in self.miner.mine_x(dirs, modules=modules, subscribe=subscribe, name_only=name_only,
+                                          subscribe_handler=formmater.print, workers=workers):
                 if streaming_mode:
                     print(formmater.format(item))
                 else:

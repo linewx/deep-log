@@ -9,6 +9,7 @@ from deep_log.miner import DeepLogMiner
 
 # back pressure
 # https://pyformat.info/
+from deep_log.record_writer import LogRecordWriterFactory
 from deep_log.runner import LogRunner
 
 logging.basicConfig(level=logging.INFO,
@@ -95,6 +96,7 @@ class CmdHelper:
         parser.add_argument('--tags', help='query by tags')
         parser.add_argument('--modules', help='query by modules')
         parser.add_argument('--template', help='logger template')
+        parser.add_argument('--distinct', help='distinct column')
         parser.add_argument('--template_dir', help='logger template dir')
         parser.add_argument('--name-only', action='store_true', help='show only file name')
         parser.add_argument('--full', action='store_true', help='display full')
@@ -120,15 +122,18 @@ def main():
     log_config.add_filters(CmdHelper.build_filters(args), scope='global')
     log_config.add_meta_filters(CmdHelper.build_meta_filters(args), scope='global')
     # log_config.set_template(args.template, scope='global')
-    log_miner = DeepLogMiner(log_config)
-    log_analyzer = LogAnalyzer(log_miner)
+    log_miner = DeepLogMiner(log_config) # mapper
 
-    arguments = ['subscribe', 'order_by', 'analyze', 'format', 'limit', 'full', 'reverse', 'name_only', 'workers']
+    log_analyzer = LogAnalyzer(args.order_by, args.analyze, args.reverse) #reducer
+
+    log_record_writer = LogRecordWriterFactory.create(args.format, args.full)
+
+    arguments = ['subscribe',  'limit',  'name_only', 'workers', 'modules', 'distinct']
 
     # log_analyzer.analyze(dirs=args.target, modules=CmdHelper.build_modules(args),
     #                      **{one: CmdHelper.get_argument(args, log_config, one) for one in arguments})
     #
-    runner = LogRunner(log_miner, log_analyzer, targets=args.target,
+    runner = LogRunner(log_miner, log_analyzer, log_record_writer, targets=args.target,
                        **{one: CmdHelper.get_argument(args, log_config, one) for one in arguments})
     runner.run()
 
