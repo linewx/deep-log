@@ -1,0 +1,20 @@
+common:
+  name:
+variables:
+root:
+  file_filters: [ ]
+  files:
+    excludes: [ ]
+    includes: [ ]
+  filters:
+    - name: DefaultLogFilter
+      params: {}
+  handlers:
+    - name: DefaultLogHandler
+      params: {}
+  parser:
+    name: DefaultLogParser
+    params:
+      pattern: (?P<content>.*)
+  path: /
+loggers:

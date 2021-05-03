@@ -15,7 +15,7 @@ setup(
     url='https://github.com/linewx/deep-log',
     packages=find_packages(),
     install_requires=install_requires,
-    package_data={'deep_log.config': ['*.json']},
+    package_data={'deep_log.config': ['*.yaml']},
     entry_points={
         'console_scripts': [
             'dl = deep_log.main:main',

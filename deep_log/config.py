@@ -6,6 +6,8 @@ from collections import OrderedDict
 from os import path
 
 # trie node
+import pkg_resources
+
 from deep_log import utils
 
 from deep_log import parser
@@ -89,6 +91,10 @@ class Loggers:
 class TemplateRepo:
     def __init__(self, template_dir=None):
         self.template_repo = {}
+
+        if not os.path.exists(template_dir):
+            return
+
         for one in os.listdir(template_dir):
             template_file = os.path.join(template_dir, one)
             with open(template_file) as f:
@@ -112,6 +118,7 @@ class LogConfig:
 
         # load settings
         settings = self._load_config(config_root)
+        self.populate_default_values(settings)
         self.populate_vars(settings, custom_variables)
         self.populate_paths(settings)
 
@@ -182,7 +189,17 @@ class LogConfig:
         with open(self._get_config_file()) as f:
             return yaml.safe_load(f)
 
+    def populate_default_values(self, settings):
+        if 'variables' not in settings or settings.get('variables') is None:
+            settings['variables'] = {}
+
+        if 'loggers' not in settings or settings.get('loggers') is None:
+            settings['loggers'] = []
+
     def populate_vars(self, settings, variables):
+        if settings.get('variables') is None:
+            settings['variables'] = {}
+
         if variables:
             settings.get('variables').update(variables)
 
@@ -253,10 +270,12 @@ class LogConfig:
         return settings
 
     def _get_config_file(self):
-        if self.config_root:
+        if os.path.exists(self.config_root):
             return utils.normalize_path(os.path.join(self.config_root, 'config.yaml'))
-        else:
+        elif os.path.exists(utils.normalize_path('~/.deep_log/config.yaml')):
             return utils.normalize_path('~/.deep_log/config.yaml')
+        else:
+            return pkg_resources.resource_filename('deep_log', 'config.yaml')
 
     def _build_loggers(self, settings):
         loggers_section = settings.get('loggers')
