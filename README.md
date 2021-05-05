@@ -9,18 +9,20 @@ Installation
  pip install deep-log
 ```
 
-Architecture
---------------------
 
 Main Features
 --------------------
 * 
 
-Examples
+Basic Usage
 --------------------
 * **search keyword** 
 ```bash
 dl hello --target /tmp/ # search all lines in the files under folder /tmp which contain the word hello  
+```
+* **seach with filters**
+```bash
+dl  --target /tmp --filter="'hello' not in _record " #search all lines in the files under folder /tmp which not contain the word hello 
 ```
 * **subscribe log change with keyword** 
 ```bash
@@ -29,10 +31,23 @@ dl hello -- target /tmp --subscribe #subscribe incoming change which contain key
 
 * **data analysis**
 ```bash
-dl hello --target /tmp/ --analyze=df.groupby(['_content']).size() # 
+dl hello --target /tmp/ --analyze="df.groupby(['_record']).size()" # find all lines which contain hello then groupby by line content
+
+hello Jack\n     2
+hello James\n    2
+hello Jim\n      2
+hello Joe\n      4
+hello Rain\n     4
+hello World\n    2 
 ```
 
+Documentation
+--------------------
+the office documents is hosted in 
 
+License
+--------------------
+[BSD 3](LICENSE)
 
 
 

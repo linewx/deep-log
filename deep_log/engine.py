@@ -1,8 +1,6 @@
+import multiprocessing as mp
 import os
 import sys
-import time
-from functools import partial
-import multiprocessing as mp
 
 
 class LogEngine:
@@ -47,8 +45,6 @@ class LogEngine:
             for one in self.log_miner.get_target_files():
                 print(one)
 
-        need_reduce = self.log_analyzer.need_reduce()
-
         total_counter = 0
         batch_counter = 0
         existing_records = set()
@@ -78,8 +74,6 @@ class LogEngine:
                 batch_counter = 0
                 batch_results.clear()
 
-
-
         else:
             # flush content
             self.log_writer.write(self.log_analyzer.analyze(batch_results))
@@ -107,7 +101,7 @@ class LogEngine:
                 try:
                     for item in one:
                         yield item
-                except:
+                except Exception as error:
                     pass
 
     def run_in_multi_streams(self):
@@ -123,4 +117,4 @@ class LogEngine:
             p.start()
 
         while True:
-            yield (queue.get())
+            yield queue.get()

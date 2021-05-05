@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import logging
+import time
 
 from deep_log import factory
 from deep_log.analyzer import LogAnalyzer
@@ -28,7 +29,8 @@ class CmdHelper:
 
         if args.pattern:
             filters.append(
-                factory.FilterFactory.create_dsl_filter('\'{}\' in _record'.format(args.pattern), args.pass_on_exception))
+                factory.FilterFactory.create_dsl_filter('\'{}\' in _record'.format(args.pattern),
+                                                        args.pass_on_exception))
 
         if args.filter:
             filters.append(factory.FilterFactory.create_dsl_filter(args.filter, args.pass_on_exception))
@@ -123,13 +125,13 @@ def main():
     log_config.add_filters(CmdHelper.build_filters(args), scope='global')
     log_config.add_meta_filters(CmdHelper.build_meta_filters(args), scope='global')
     # log_config.set_template(args.template, scope='global')
-    log_miner = DeepLogMiner(log_config) # mapper
+    log_miner = DeepLogMiner(log_config)  # mapper
 
-    log_analyzer = LogAnalyzer(args.order_by, args.analyze, args.reverse) #reducer
+    log_analyzer = LogAnalyzer(args.order_by, args.analyze, args.reverse)  # reducer
 
     log_record_writer = LogRecordWriterFactory.create(args.format, args.full)
 
-    arguments = ['subscribe',  'limit',  'name_only', 'workers', 'modules', 'distinct', 'include_history', 'window']
+    arguments = ['subscribe', 'limit', 'name_only', 'workers', 'modules', 'distinct', 'include_history', 'window']
 
     # log_analyzer.analyze(dirs=args.target, modules=CmdHelper.build_modules(args),
     #                      **{one: CmdHelper.get_argument(args, log_config, one) for one in arguments})
