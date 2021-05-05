@@ -1,0 +1,6 @@
+sphinx
+sphinx-rtd-theme
+sphinxcontrib-httpdomain
+recommonmark
+lfdocs-conf
+myst-parser
