@@ -14,7 +14,7 @@ class DefaultOutputFormat(OutputFormat):
 
 class TextOutputFormat(OutputFormat):
     def __init__(self, format_string=None):
-        self.log_format = '{raw}' if format_string is None else format_string
+        self.log_format = '{_content}' if format_string is None else format_string
 
         self.full_mode = True if format_string == '{}' else False
 

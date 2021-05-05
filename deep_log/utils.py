@@ -50,22 +50,22 @@ def normalize_path(dir, with_wildcard=False):
 def get_fileinfo(filename):
     if os.path.exists(filename):
         return {
-            'name': filename,
-            'writable': os.access(filename, os.W_OK),
-            'readable': os.access(filename, os.R_OK),
-            'executable': os.access(filename, os.X_OK),
-            'ctime': datetime.fromtimestamp(path.getctime(filename)),
-            'mtime': datetime.fromtimestamp(path.getmtime(filename)),
-            'actime': datetime.fromtimestamp(path.getatime(filename)),
-            'size': path.getsize(filename),
-            'basename': path.basename(filename),
-            'isdir': path.isdir(filename),
-            'isfile': path.isfile(filename),
-            'exists': True,
+            '_name': filename,
+            '_writable': os.access(filename, os.W_OK),
+            '_readable': os.access(filename, os.R_OK),
+            '_executable': os.access(filename, os.X_OK),
+            '_ctime': datetime.fromtimestamp(path.getctime(filename)),
+            '_mtime': datetime.fromtimestamp(path.getmtime(filename)),
+            '_actime': datetime.fromtimestamp(path.getatime(filename)),
+            '_size': path.getsize(filename),
+            '_basename': path.basename(filename),
+            '_isdir': path.isdir(filename),
+            '_isfile': path.isfile(filename),
+            '_exists': True,
         }
 
     else:
         return {
-            'name': filename,
-            'exists': False
+            '_name': filename,
+            '_exists': False
         }

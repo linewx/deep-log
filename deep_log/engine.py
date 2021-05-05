@@ -94,8 +94,11 @@ class LogEngine:
             for one in self.run_in_multi_batches():
                 yield one
 
-    def default_run(self):
-        pass
+    def execute1(self):
+        if self.subscribe:
+            return self.log_miner.mining_files(self.log_miner.get_target_files(self.targets, self.modules))
+        else:
+            return self.log_miner.mine_files(self.log_miner.get_target_files(self.targets, self.modules))
 
     def run_in_multi_batches(self):
         with mp.Pool(processes=self.workers) as pool:

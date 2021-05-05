@@ -28,7 +28,7 @@ class CmdHelper:
 
         if args.pattern:
             filters.append(
-                factory.FilterFactory.create_dsl_filter('\'{}\' in raw'.format(args.pattern), args.pass_on_exception))
+                factory.FilterFactory.create_dsl_filter('\'{}\' in _content'.format(args.pattern), args.pass_on_exception))
 
         if args.filter:
             filters.append(factory.FilterFactory.create_dsl_filter(args.filter, args.pass_on_exception))

@@ -7,6 +7,8 @@ from functools import partial
 from os import path
 from multiprocessing import Pool
 
+from binaryornot.check import is_binary
+
 from deep_log import utils
 
 
@@ -88,6 +90,10 @@ class DeepLogMiner:
 
         filtered_list = []
         for file_name in file_name_list:
+            # ignore binary file type
+            if is_binary(file_name):
+                continue
+
             meta_filters = self.config.get_meta_filters(file_name)
             for one_filter in meta_filters:
                 if not one_filter.filter_meta(file_name):

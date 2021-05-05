@@ -26,32 +26,35 @@ class DefaultLogParser(LogParser):
         current_item = {}
 
         while True:
-            line = file.readline()
-            if not line:
-                # flush final results
-                if current_item:
-                    return [*items, current_item]
-                else:
-                    return [*items]
+            try:
+                line = file.readline()
+                if not line:
+                    # flush final results
+                    if current_item:
+                        return [*items, current_item]
+                    else:
+                        return [*items]
 
-            result = self.parse_line(line)
-            if result is None:
-                # not matched, append to last item, if not found, ignore it
-                if not current_item:
-                    logging.warning("line %s ignored" % line)
+                result = self.parse_line(line)
+                if result is None:
+                    # not matched, append to last item, if not found, ignore it
+                    if not current_item:
+                        logging.warning("line %s ignored" % line)
+                    else:
+                        # affinity to last item
+                        current_item['_content'] = current_item['_content'] + line
+                        # current_item['content'] = current_item['content'] + line
+                        # current_item.update(get_fileinfo(file.name))
                 else:
-                    # affinity to last item
-                    current_item['raw'] = current_item['raw'] + line
-                    current_item['content'] = current_item['content'] + line
-                    # current_item.update(get_fileinfo(file.name))
-            else:
-                # matched pattern
-                # flush current item first
-                if current_item:
-                    items.append(current_item)
-                current_item = {'line_number': file.tell(), **result}
-                current_item.update({'tags': set()})
-                current_item.update(get_fileinfo(file.name))
+                    # matched pattern
+                    # flush current item first
+                    if current_item:
+                        items.append(current_item)
+                    current_item = {'_line_number': file.tell(), **result}
+                    current_item.update({'tags': set()})
+                    current_item.update(get_fileinfo(file.name))
+            except Exception as error:
+                print(file.name)
 
     def parse_line(self, one_line):
         # {'raw': '', 'content': 'content'}
@@ -63,9 +66,9 @@ class DefaultLogParser(LogParser):
             result = None
         else:
             result = matched_result.groupdict()
-            result['raw'] = one_line
-            if 'content' not in result:
-                result['content'] = one_line
+            result['_content'] = one_line
+            # if '_content' not in result:
+            #     result['content'] = one_line
 
         return result
 
