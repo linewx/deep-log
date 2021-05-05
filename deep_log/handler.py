@@ -104,7 +104,7 @@ class RegLogHandler(LogHandler):
     def handle(self, one_log_item):
         new_one_log_item = copy(one_log_item)
         if self.pattern:
-            matched_result = re.search(self.pattern, new_one_log_item.get('_content'))
+            matched_result = re.search(self.pattern, new_one_log_item.get('_record'))
             if matched_result:
                 new_one_log_item.update(matched_result.groupdict())
         return new_one_log_item

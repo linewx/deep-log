@@ -42,7 +42,7 @@ class DefaultLogParser(LogParser):
                         logging.warning("line %s ignored" % line)
                     else:
                         # affinity to last item
-                        current_item['_content'] = current_item['_content'] + line
+                        current_item['_record'] = current_item['_record'] + line
                         # current_item['content'] = current_item['content'] + line
                         # current_item.update(get_fileinfo(file.name))
                 else:
@@ -66,7 +66,7 @@ class DefaultLogParser(LogParser):
             result = None
         else:
             result = matched_result.groupdict()
-            result['_content'] = one_line
+            result['_record'] = one_line
             # if '_content' not in result:
             #     result['content'] = one_line
 
