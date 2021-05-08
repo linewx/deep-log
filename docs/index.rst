@@ -11,18 +11,10 @@ Welcome to DeepLog's documentation!
    :caption: Contents:
 
    readme
-   architecture
+   overview
+   quickstart
    tutorial
-   config
-   parser
-   filter
-   handler
-   meta_filter
-   templates
-
-
-
-
+   
 Indices and tables
 ==================
 
