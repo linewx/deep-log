@@ -5,7 +5,7 @@ Overview
 Architecture
 --------------
 
-.. image:: https://github.com/linewx/deep-log/blob/master/docs/arch.png?raw=true
+.. image:: images/arch.png
 
 DeepLog is lightweight and standalone log analysis engine over both bounded and unbounded log data. 
 
