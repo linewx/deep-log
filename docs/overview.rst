@@ -18,7 +18,7 @@ DeepLog is lightweight and standalone log analysis engine over both bounded and 
 * ETL processing
     deep-log has three steps to process data, parse, handle, filter. 
 
-    * :ref:`parser`,  parser is used to parse log data, which transfer unstructured data to structured data for further handlers.
+    * :ref:`parser <parser>`, parser is used to parse log data, which transfer unstructured data to structured data for further handlers.
 
     * **handlers**,handlers are used to data tranfer or clear which come from parser. for example, strip strings, data type convertion. 
 

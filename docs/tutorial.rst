@@ -6,8 +6,9 @@ Configuration
 --------------
 config file
 
+.. parser:
 
-Parser
+parser
 --------------
 parser
 
