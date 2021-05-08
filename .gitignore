@@ -21,3 +21,4 @@ dist/
 **/settings.yaml
 **/settings.json
 gen_settings.py
+docs/_build

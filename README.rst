@@ -61,16 +61,12 @@ Basic Usage
     hello Rain\n     4
     hello World\n    2
 
-Advanced Usage
-----------------------
-
 
 Documentation
 --------------------
 the official documentation is hosted in https://deep-log.readthedocs.io/en/latest/
 
-License
---------------------
+
 
 
 
