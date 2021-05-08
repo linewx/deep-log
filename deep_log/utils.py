@@ -2,7 +2,7 @@ import functools
 import glob
 import os
 import re
-from datetime import datetime
+import datetime
 from os import path
 from string import Formatter
 
@@ -54,9 +54,9 @@ def get_fileinfo(filename):
             '_writable': os.access(filename, os.W_OK),
             '_readable': os.access(filename, os.R_OK),
             '_executable': os.access(filename, os.X_OK),
-            '_ctime': datetime.fromtimestamp(path.getctime(filename)),
-            '_mtime': datetime.fromtimestamp(path.getmtime(filename)),
-            '_actime': datetime.fromtimestamp(path.getatime(filename)),
+            '_ctime': datetime.datetime.fromtimestamp(path.getctime(filename)),
+            '_mtime': datetime.datetime.fromtimestamp(path.getmtime(filename)),
+            '_actime': datetime.datetime.fromtimestamp(path.getatime(filename)),
             '_size': path.getsize(filename),
             '_basename': path.basename(filename),
             '_isdir': path.isdir(filename),

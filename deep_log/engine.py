@@ -79,6 +79,10 @@ class LogEngine:
             self.log_writer.write(self.log_analyzer.analyze(batch_results))
 
     def execute(self):
+        if self.workers == 1:
+            for one in self.execute1():
+                yield one
+
         if self.subscribe:
             # stream mode
             for one in self.run_in_multi_streams():

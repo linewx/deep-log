@@ -18,6 +18,7 @@ class LogParser:
 class DefaultLogParser(LogParser):
     def __init__(self, *args, **kwargs):
         self.pattern = '' if 'pattern' not in kwargs else kwargs['pattern']
+        self.compiled_pattern = re.compile(self.pattern)
         self.log_items = []
         self.strategy = ''
 
@@ -60,7 +61,7 @@ class DefaultLogParser(LogParser):
         # {'raw': '', 'content': 'content'}
         # None if not matched
         result = None
-        matched_result = re.match(self.pattern, one_line)
+        matched_result = self.compiled_pattern.match(one_line)
 
         if matched_result is None:
             result = None

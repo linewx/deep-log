@@ -6,6 +6,7 @@ from copy import copy
 from datetime import datetime
 from os import path
 
+from deep_log import utils
 from deep_log.utils import built_function
 
 
@@ -28,10 +29,12 @@ class ModuleLogHandler(LogHandler):
 class ReLogHandler(LogHandler):
     def __init__(self, pattern):
         self.pattern = pattern
+        self.compiled_pattern = re.compile(self.pattern)
 
     def handle(self, one_log_item):
         try:
-            results = re.search(self.pattern, one_log_item['content']).groupdict()
+            # results = re.search(self.pattern, one_log_item['content']).groupdict()
+            results = self.compiled_pattern.search(one_log_item['content']).groupdict()
             if results:
                 one_log_item.update(results)
         except:
@@ -92,7 +95,7 @@ class TransformLogHandler(LogHandler):
         for one_definition in self.definitions:
             name = one_definition.get('name')
             value = one_definition.get('value')
-            new_one_log_item[name] = eval(value, one_log_item)
+            new_one_log_item[name] = eval(value, {**one_log_item, **utils.built_function})
 
         return new_one_log_item
 
@@ -100,11 +103,12 @@ class TransformLogHandler(LogHandler):
 class RegLogHandler(LogHandler):
     def __init__(self, pattern):
         self.pattern = pattern
+        self.compiled_pattern = re.compile(self.pattern)
 
     def handle(self, one_log_item):
         new_one_log_item = copy(one_log_item)
         if self.pattern:
-            matched_result = re.search(self.pattern, new_one_log_item.get('_record'))
+            matched_result = self.compiled_pattern.search(new_one_log_item.get('_record'))
             if matched_result:
                 new_one_log_item.update(matched_result.groupdict())
         return new_one_log_item

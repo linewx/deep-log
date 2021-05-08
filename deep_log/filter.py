@@ -1,5 +1,7 @@
 import copy
 
+from deep_log import utils
+
 
 class LogFilter:
     def filter(self, one_log_item):
@@ -23,8 +25,9 @@ class DslFilter(LogFilter):
         try:
             if self.dsl:
                 clone_item = copy.deepcopy(one_log_item)
-                return eval(self.dsl, clone_item)
+                return eval(self.dsl, {**clone_item, **utils.built_function})
             else:
                 return True
-        except:
+        except Exception as error:
+            print(error)
             return self.pass_on_exception
