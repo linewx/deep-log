@@ -34,8 +34,7 @@ Not Just grep
 
 how to get the log count groupby log level? grep haven't the ability to do it. but DeepLog can handle it.
 
-setup a config file named `config.yaml
-<sample/sample1/config.yaml>`_ under ~/.deep_log
+setup a config file named :download:`this example script <samples/sample1/config.yaml>`._ under ~/.deep_log
    
 
 
