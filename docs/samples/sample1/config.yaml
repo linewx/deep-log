@@ -1,9 +1,0 @@
-root:
-  parser:
-    name: DefaultLogParser
-    params:
-      pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
-  path: /
-loggers:
-
-  
