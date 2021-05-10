@@ -54,7 +54,7 @@ grep not fully support such case, but with DeepLog we can do like with following
 
 
 
-  within root section, there are two components :ref:`parser<dl_parser>` and handlers.
+  within root section, there are two components :ref:`parser<dl_parser>` and :ref:`handlers<dl_handlers>`.
 
 .. __: https://raw.githubusercontent.com/linewx/deep-log/master/samples/sample1/config.yaml
 
