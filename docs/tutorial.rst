@@ -6,7 +6,7 @@ Configuration
 --------------
 config file
 
-.. _parser:
+.. _dl_parser:
 
 Parser
 --------------
