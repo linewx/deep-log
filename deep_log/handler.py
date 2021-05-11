@@ -25,22 +25,6 @@ class ModuleLogHandler(LogHandler):
         return one_log_item
 
 
-# re.search("\n(?P<exception>.*?Exception):(?P<exception_messaage>.*)", one_log_item['content']).groupdict()
-class ReLogHandler(LogHandler):
-    def __init__(self, pattern):
-        self.pattern = pattern
-        self.compiled_pattern = re.compile(self.pattern)
-
-    def handle(self, one_log_item):
-        try:
-            # results = re.search(self.pattern, one_log_item['content']).groupdict()
-            results = self.compiled_pattern.search(one_log_item['content']).groupdict()
-            if results:
-                one_log_item.update(results)
-        except:
-            return one_log_item
-
-
 class TypeLogHandler(LogHandler):
     def __init__(self, definitions):
         self.type_definitions = definitions
@@ -101,14 +85,15 @@ class TransformLogHandler(LogHandler):
 
 
 class RegLogHandler(LogHandler):
-    def __init__(self, pattern):
+    def __init__(self, pattern, field=None):
         self.pattern = pattern
+        self.field = field if field else '_record'
         self.compiled_pattern = re.compile(self.pattern)
 
     def handle(self, one_log_item):
         new_one_log_item = copy(one_log_item)
         if self.pattern:
-            matched_result = self.compiled_pattern.search(new_one_log_item.get('_record'))
+            matched_result = self.compiled_pattern.search(new_one_log_item.get(self.field))
             if matched_result:
                 new_one_log_item.update(matched_result.groupdict())
         return new_one_log_item
