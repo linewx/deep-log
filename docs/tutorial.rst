@@ -151,7 +151,7 @@ RegLogHandler is used to extract values from specific field, which work very lik
 
 .. __: https://docs.python.org/3/library/re.html
 
-** examples **
+**examples**
 
 .. code-block:: yaml
 handlers:
@@ -180,7 +180,7 @@ TransformLogHandler use dsl expression to transform record object with new field
     + name, the field to be created
     + value, the value expression.
 
-** examples **
+**examples**
 
 .. code-block:: yaml
 handlers:
@@ -222,7 +222,7 @@ NameFilter is used to filter file name based on `Unix filename pattern matching`
 * ``patterns``, define the file name match patterns, which split by comma ``,``.
 * ``exclude_patterns``, define excluded file name match patterns, which split by comma ``,``.
 
-** examples **
+**examples**
 
 .. code-block:: yaml
 
@@ -242,7 +242,7 @@ DslMetaFilter is a more powerful filer than name filer, which can use python exp
 
 * ``filter``, which is :ref:`dsl expression<dl_dsl>`
 
-** example **
+**example**
 
 .. code-block:: yaml
 
@@ -320,7 +320,7 @@ user-defined items
 * parsed result by parser, for example, parsed time property.
 * generate by by :ref:`TransformLogHandler`
 
-** examples **
+**examples**
 
 following is the examples returned by DeepLog.
 
@@ -347,9 +347,9 @@ modules                             description
 =================================   =============================================
 
 
-: __re_module_: https://docs.python.org/3/library/re.html
-: __path_module_: https://docs.python.org/3/library/os.path.html
-: __datetime_module_: https://docs.python.org/3/library/datetime.html
+: __re_module: https://docs.python.org/3/library/re.html
+: __path_module: https://docs.python.org/3/library/os.path.html
+: __datetime_module: https://docs.python.org/3/library/datetime.html
 
 
 
