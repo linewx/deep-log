@@ -123,16 +123,17 @@ TagLogHandler is used to tag log line with specified condition. with following a
     + condition, define the match condition if tag the name.
 
 **examples**
+
 the handler configuration is:
 
 .. code-block:: yaml
 
-handlers:
-  - name: TagLogHandler
-    params:
-      definitions:
-        - name: error
-        - condition: "'error' == level or 'error' in message"
+    handlers:
+      - name: TagLogHandler
+        params:
+          definitions:
+            - name: error
+            - condition: "'error' == level or 'error' in message"
 
 the above handler will tag log line as error when level is 'error' or 'error' in message. with above parsed result, the handler output will {tags: Set('error'), ...}, which can be
 
@@ -257,7 +258,7 @@ the above means all empty files will be ignored
 
 .. _dl_templates:
 
-Templates
+Template System
 --------------
 templates
 
