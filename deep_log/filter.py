@@ -14,9 +14,9 @@ class DefaultLogFilter(LogFilter):
 
 
 class DslFilter(LogFilter):
-    def __init__(self, dsl, pass_on_exception=False):
+    def __init__(self, filter, pass_on_exception=False):
 
-        self.dsl = dsl
+        self.dsl = filter
         self.pass_on_exception = pass_on_exception
         if self.dsl:
             self.dsl = compile(self.dsl, '', 'eval')

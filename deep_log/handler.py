@@ -66,8 +66,15 @@ class TypeLogHandler(LogHandler):
 
 
 class StripLogHandler(LogHandler):
+    def __init__(self, fields=None):
+        self.fields = fields
+
     def handle(self, one_log_item):
-        return {key: (value.strip() if isinstance(value, str) else value) for key, value in one_log_item.items()}
+        if self.field is None:
+            return {key: (value.strip() if isinstance(value, str) else value) for key, value in one_log_item.items()}
+        else:
+            return {key: (value.strip() if key in self.fields and isinstance(value, str) else value) for key, value in
+                    one_log_item.items()}
 
 
 class TransformLogHandler(LogHandler):

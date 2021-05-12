@@ -11,7 +11,7 @@ class FilterFactory:
         return {
             'name': 'DslFilter',
             'params': {
-                'dsl': dsl,
+                'filter': dsl,
                 'pass_on_exception': pass_on_exception
             }
         }
@@ -43,7 +43,7 @@ class FilterFactory:
         return {
             'name': 'DslFilter',
             'params': {
-                'dsl': filter_dsl_template.format(start_time)
+                'filter': filter_dsl_template.format(start_time)
             }
         }
 
@@ -55,7 +55,7 @@ class FilterFactory:
         return {
             'name': 'DslFilter',
             'params': {
-                'dsl': 'tags & {}'.format(str(target_tags))
+                'filter': 'tags & {}'.format(str(target_tags))
             }
         }
         # return filter.DslFilter('tags & {}'.format(str(target_tags)))
@@ -88,7 +88,7 @@ class MetaFilterFactory:
         return {
             'name': 'DslMetaFilter',
             'params': {
-                'dsl': meta_filter_template.format(start_time)
+                'filter': meta_filter_template.format(start_time)
             }
         }
         # return meta_filter.DslMetaFilter(meta_filter_template.format(start_time))
@@ -110,7 +110,7 @@ class MetaFilterFactory:
         return {
             'Name': 'DslMetaFilter',
             'params': {
-                'dsl': dsl
+                'filter': dsl
             }
         }
         # return meta_filter.DslMetaFilter(dsl)
