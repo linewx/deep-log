@@ -170,6 +170,7 @@ handlers:
 
 the above example show using RegLogHandler to parse exception name and messages.
 
+.. _TransformLogHandler_:
 
 TransformLogHandler
 ^^^^^^^^^^^^^^^^^^^
@@ -198,6 +199,8 @@ Filters
 --------------
 filter is used to filter the log item in the log files.
 
+.. _dsl_filter:
+
 DslFilter
 ^^^^^^^^^^
 DslFilter is a filter which accept a python expression as a filter condition. with attributes:
@@ -222,6 +225,7 @@ NameFilter is used to filter file name based on `Unix filename pattern matching`
 ** examples **
 
 .. code-block:: yaml
+
 meta_filters:
   - name: NameFilter
     params:
@@ -236,12 +240,20 @@ DslMetaFilter
 ^^^^^^^^^^^^^
 DslMetaFilter is a more powerful filer than name filer, which can use python expression the filter file based file meta info. which can take one argument:
 
-* ``filter``, which is python expression
+* ``filter``, which is :ref:`dsl expression<dl_dsl>`
 
-: __: https://docs.python.org/3/library/fnmatch.html
+** example **
 
-DslMetaFilter
-^^^^^^^^^^^^^^
+.. code-block:: yaml
+
+meta_filters:
+  - name: NameFilter
+    params:
+      filter: _size > 0
+
+
+the above means all empty files will be ignored
+
 
 .. _dl_templates:
 
@@ -253,56 +265,66 @@ templates
 
 Dsl Expressions
 ---------------
-dsl expression in DeepLog in a python expression which can be used in following cases but with different context:
+dsl expression in DeepLog in a python expression for different usage with different context, there are four usages in general:
 
-* ``filter``,
+* ``filter``, is used to filter log content, which can be ``--filter`` option value, or filter params in :ref:`DslFilter` definitions. :ref:`record_object` and :ref:`_module_object` are included in context.
 
-* ``DslFilter`` in configuration,
+* ``handler``, is advanced usage in :ref:`TransformLogHandler`, both :ref:`record_object` and :ref:`_module_object` are included in context.
 
-* ``analyze``,
+* ``meta filer``, is only applied on meta filer, which can be ``--meta-filer`` option value or filter param in :ref:`DslMetaFilter` definitions. :ref:`meta_object` and :ref:`_module_object` are included in context.
 
-* ``
-
-
+* ``analyze``, is dedicated for analysis function. which can be set in ``--analyze`` command line option.  both :ref:`record_object` and :ref:`_module_object` are included in context. besides, user can manipulate the df(DataFrame) property in this situation.
 
 
+.. _meta_object:
 
 Meta Object
 --------------
 meta object
 
-- built-in items
+- built-in meta properties
 
-  - *_name*: filename
-  - *_writable*: file is writable or not
-  - *_readable*: file is readable or not
-  - *_executable*': file is executable or not
-  - *_ctime*: file creaction time
-  - *_mtime*: file modified time
-  - *_actime*: file access time
-  - *_size*: file size
-  - *_basename*: file base name
-   
-.. record_object:
+============= ==========================
+property      description
+============= ==========================
+_name         filename
+_writable     file is writable or not
+_readable     file is readable or not
+_executable   file is executable or not
+_ctime        file creaction time
+_mtime        file modified time
+_actime       file access time
+_size         file size
+_basename     file base name
+============= ==========================
+
+
+.. _record_object:
 
 Record Object
 --------------
 
-* built-in items
+built-in properties
+^^^^^^^^^^^^^^^^^^^^
+* *all meta object*
+* *_record*, file line
+& *df*, log items data frame
 
-  - *all meta object*
-  - *_record*, file line   
+.. note::
+    property ``df`` can only be invoked in analysis function.
 
-* user-defined items
-  
-  - parsed result by parser
-  - transformed by handlers
 
-* examples
+user-defined items
+^^^^^^^^^^^^^^^^^^^
+
+* parsed result by parser, for example, parsed time property.
+* generate by by :ref:`TransformLogHandler`
+
+** examples **
 
 following is the examples returned by DeepLog.
 
-::
+.. code-block:: json
 
     {
         '_name': '/tmp/apache_v2.log' # meta object property, filename
@@ -310,22 +332,24 @@ following is the examples returned by DeepLog.
         'time': Datetime(2025, 12, 04, 4, 52, 5) # user parsed property, parsed by from string 'Sun Dec 04 04:52:05 2005'
     }
 
+.. _module_object:
+
 Built-in Modules
 -------------------
 there are kinds of python modules exposed which can be invoked in dsl Expressions:
 
-=======================   =============================================
-modules                   description
-=======================   =============================================
-:ref:`re<re_module>`      Regular expression operations
-:ref:`re<path_module>`    Common pathname manipulations
-:ref:`re<path_module>`    https://docs.python.org/3/library/datetime.html
-=======================   =============================================
+=================================   =============================================
+modules                             description
+=================================   =============================================
+:ref:`re<re_module>`                Regular expression operations
+:ref:`path<path_module>`            Common pathname manipulations
+:ref:`datetime<datetime_module>`    Basic date and time types
+=================================   =============================================
 
 
 : __re_module_: https://docs.python.org/3/library/re.html
-: __path_module: https://docs.python.org/3/library/os.path.html
-: __datetime_module: https://docs.python.org/3/library/datetime.html
+: __path_module_: https://docs.python.org/3/library/os.path.html
+: __datetime_module_: https://docs.python.org/3/library/datetime.html
 
 
 
