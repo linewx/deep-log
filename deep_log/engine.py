@@ -11,7 +11,7 @@ class LogEngine:
         self.log_analyzer = log_analyzer  # reducer
         self.log_writer = log_writer
         self.targets = targets
-        self.modules = modules
+        self.modules = modules if not modules else modules.split(',')
         self.name_only = name_only
         self.workers = workers if workers else os.cpu_count()
         self.subscribe = subscribe
@@ -42,7 +42,7 @@ class LogEngine:
 
     def run(self):
         if self.name_only:
-            for one in self.log_miner.get_target_files():
+            for one in self.log_miner.get_target_files(self.targets, self.modules):
                 print(one)
 
         total_counter = 0

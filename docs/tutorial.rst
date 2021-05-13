@@ -4,7 +4,15 @@ Tutorial
 
 Configuration
 --------------
-config file
+DeepLog can be executed without config file. however, without config file, the functionalities of DeepLog is very limited, every log item can only be treated as a string. but with pre-defined loggers in config file, DeepLog can know more about logs, not just a string line by line, but also the log time, the log level, error etc.
+in general, config file is a yaml file named ``config.yaml`` under config root ``~/.deep_log/``.
+
+**example**
+this is what config file look like:
+
+
+
+
 
 .. _dl_parser:
 
@@ -155,17 +163,18 @@ RegLogHandler is used to extract values from specific field, which work very lik
 **examples**
 
 .. code-block:: yaml
-handlers:
-  - name: TypeLogHandler
-    params:
-      definitions:
-        - field: time
-          format: '%m-%d-%Y %H:%M:%S.%f'
-          type: datetime
-  - name: RegLogHandler
-    params:
-      pattern: "\n(?P<exception>.*?Exception):(?P<exception_message>.*)"
-      field: "_record"
+
+    handlers:
+      - name: TypeLogHandler
+        params:
+          definitions:
+            - field: time
+              format: '%m-%d-%Y %H:%M:%S.%f'
+              type: datetime
+      - name: RegLogHandler
+        params:
+          pattern: "\n(?P<exception>.*?Exception):(?P<exception_message>.*)"
+          field: "_record"
 
 
 
@@ -247,20 +256,23 @@ DslMetaFilter is a more powerful filer than name filer, which can use python exp
 
 .. code-block:: yaml
 
-meta_filters:
-  - name: NameFilter
-    params:
-      filter: _size > 0
+    meta_filters:
+      - name: NameFilter
+        params:
+          filter: _size > 0
 
 
-the above means all empty files will be ignored
+    the above means all empty files will be ignored
 
 
 .. _dl_templates:
 
 Template System
 --------------
-templates
+logs with the same type always have the same log format. to parse/handle/filter log with the same patterns, user can define those configurations as template.which can be shared by multiple loggers or command line.
+
+
+
 
 .. _dl_dsl:
 

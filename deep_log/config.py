@@ -324,7 +324,7 @@ class LogConfig:
                     paths.append(the_path)
                 else:
                     # if set(modules) & the_modules:
-                    if set(modules).issubset(the_modules):
+                    if set(modules) <= the_modules:
                         paths.append(the_path)
 
         return paths

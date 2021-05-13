@@ -54,8 +54,8 @@ class CmdHelper:
         if args.file_name:
             meta_filters.append(factory.MetaFilterFactory.create_name_filter(args.file_name))
 
-        if args.file_filter:
-            meta_filters.append(factory.MetaFilterFactory.create_dsl_filter(args.file_filter))
+        if args.meta_filter:
+            meta_filters.append(factory.MetaFilterFactory.create_dsl_filter(args.meta_filter))
 
         if args.recent:
             meta_filters.append(factory.MetaFilterFactory.create_recent_filter(args.recent))
@@ -118,7 +118,7 @@ class CmdHelper:
 
 def main():
     args = CmdHelper.build_args_parser()
-    log_config = LogConfig(args.file, CmdHelper.build_variables(args), custom_template_name=args.template,
+    log_config = LogConfig(args.config, CmdHelper.build_variables(args), custom_template_name=args.template,
                            custom_template_dir=args.template_dir)
     log_config.add_filters(CmdHelper.build_filters(args), scope='global')
     log_config.add_meta_filters(CmdHelper.build_meta_filters(args), scope='global')

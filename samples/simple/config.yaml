@@ -1,0 +1,15 @@
+root:
+  parser:
+    name: DefaultLogParser
+    params:
+      pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
+  handlers:
+  - name: TypeLogHandler
+    params:
+      definitions:
+        - field: time
+          format: '%a %b %d %H:%M:%S %Y'
+          type: datetime    
+  path: /
+loggers:
+  
