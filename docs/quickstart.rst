@@ -35,8 +35,11 @@ how to get the log count groupby log level?
 grep not fully support such case, but with DeepLog we can do like with following steps:
 
 
-1. setup a config file named `config.yaml`__. under ~/.deep_log, with content::
+1. setup a config file named `config.yaml`_. under ~/.deep_log, with content：
 
+.. __: https://raw.githubusercontent.com/linewx/deep-log/master/samples/sample1/config.yaml
+
+.. code-block::yaml
     root:
       parser:
         name: DefaultLogParser
@@ -53,10 +56,8 @@ grep not fully support such case, but with DeepLog we can do like with following
     loggers:
 
 
-
   within root section, there are two components :ref:`parser<dl_parser>` and :ref:`handlers<dl_handlers>`.
 
-.. __: https://raw.githubusercontent.com/linewx/deep-log/master/samples/sample1/config.yaml
 
 2. then analyze with groupby function
 
@@ -66,6 +67,8 @@ grep not fully support such case, but with DeepLog we can do like with following
     error      595
     notice    1405
     dtype: int64
+
+to leverage powerful pandas function, we can easily get the results.
 
 How about more than one type of logs?
 --------------------------------------
