@@ -40,6 +40,7 @@ grep not fully support such case, but with DeepLog we can do like with following
 .. __: https://raw.githubusercontent.com/linewx/deep-log/master/samples/sample1/config.yaml
 
 .. code-block::yaml
+
     root:
       parser:
         name: DefaultLogParser
@@ -72,7 +73,7 @@ to leverage powerful pandas function, we can easily get the results.
 
 How about more than one type of logs?
 --------------------------------------
-we define the etl processing function in root logger in above. how about one more type of logs? let's say we have another `proxifier log`_ with different log format to analyze.how to define parser in config file?
+the above examples show how to define etl processing in root logger in above. how about one more type of logs? let's say we have another `proxifier log`_ with different log format to analyze.how to define parser in config file?
 
 .. __: https://raw.githubusercontent.com/logpai/loghub/master/Proxifier/proxifier_2k.log
 
@@ -147,7 +148,7 @@ DeepLog provide a option ``--subscribe`` to do this, which is quite powerful tha
 
 .. code-block::
 
-$ dl --subscribe --filter="'error' == level"
+    $ dl --subscribe --filter="'error' == level"
 
 it will print out the error message incoming logs, like `tail -f <filename>| grep error`
 
@@ -190,8 +191,6 @@ DeepLog support multiple processing, user specific the processors to run in para
 it will launch 8 processes to work in parallel for log analysis.
 
 
-
-   
 
 
 
