@@ -79,18 +79,18 @@ we can define more loggers under loggers section in `config.yaml`_.
 
 .. code-block::
 
-loggers:
-  - name: apache
-    path: '{loghub_root}/Apache'
-    modules:
-      - apache
-    parser:
+    loggers:
+      - name: apache
+        path: '{loghub_root}/Apache'
+        modules:
+          - apache
+        parser:
+            ...
+      - name: proxifier
+        path: '{loghub_root}/Proxifier'
+        modules:
+          - proxifier
         ...
-  - name: proxifier
-    path: '{loghub_root}/Proxifier'
-    modules:
-      - proxifier
-    ...
 
 
 then we can use different logger to analyze different type of logs.
@@ -101,37 +101,37 @@ sometimes, we process logs within different folders in the same way. to share th
 
 .. code-block::
 
-templates:
-  - name: apache
-    path: '{loghub_root}/Apache'
-    modules:
-      - apache
-    parser:
-      name: DefaultLogParser
-      params:
-        pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
-    ...
-  - name: proxifier
-    path: '{loghub_root}/Proxifier'
-    modules:
-      - proxifier
-    parser:
-      name: DefaultLogParser
-      params:
-      pattern: \[(?P<time>.*?)\] (?P<process>[^\ ]+) - (?P<message>.*)
-    ...
+    templates:
+      - name: apache
+        path: '{loghub_root}/Apache'
+        modules:
+          - apache
+        parser:
+          name: DefaultLogParser
+          params:
+            pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
+        ...
+      - name: proxifier
+        path: '{loghub_root}/Proxifier'
+        modules:
+          - proxifier
+        parser:
+          name: DefaultLogParser
+          params:
+          pattern: \[(?P<time>.*?)\] (?P<process>[^\ ]+) - (?P<message>.*)
+        ...
 
-loggers:
-  - name: apache
-    path: '{loghub_root}/Apache'
-    modules:
-      - apache
-    template: apache
-  - name: proxifier
-    path: '{loghub_root}/Proxifier'
-    modules:
-      - proxifier
-    template: proxifier
+    loggers:
+      - name: apache
+        path: '{loghub_root}/Apache'
+        modules:
+          - apache
+        template: apache
+      - name: proxifier
+        path: '{loghub_root}/Proxifier'
+        modules:
+          - proxifier
+        template: proxifier
 
 as shown above, loggers can reference the template definitions in templates section by template name. for advanced usage, you can also define template in `template repo<dl_template_repo>`
 
