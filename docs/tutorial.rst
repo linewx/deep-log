@@ -11,8 +11,32 @@ in general, config file is a yaml file named ``config.yaml`` under config root `
 this is what config file look like:
 
 .. code-block:: yaml
-    root:
-        parser:
+
+variables:
+  loghub_root: /tmp/loghub
+root:
+  parser:
+    name: DefaultLogParser
+    params:
+      pattern: (?P<content>.*?)
+  path: /
+loggers:
+  - name: apache
+    path: '{loghub_root}/Apache'
+    modules:
+      - apache
+    parser:
+      name: DefaultLogParser
+      params:
+        pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
+    handlers:
+      - name: TypeLogHandler
+        params:
+          definitions:
+            - field: time
+              format: '%a %b %d %H:%M:%S %Y'
+              type: datetime
+
 
 components
 ^^^^^^^^^^^
@@ -315,20 +339,75 @@ DslMetaFilter is a more powerful filer than name filer, which can use python exp
 .. _dl_templates:
 
 Template System
---------------
+------------------
 logs with the same type always have the same log format. to parse/handle/filter log with the same patterns, user can define those configurations as template.which can be shared by multiple loggers or command line.
 there are two ways to define templates:
 
+.. _dl_template_config:
+
 templates in config
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+templates can be defined directly in `config.yaml`_, see following snippet:
 
+.. __: https://raw.githubusercontent.com/linewx/deep-log/master/samples/template/config.yaml
+
+.. code-block:: yaml
+
+templates:
+  - name: apache
+    path: '{loghub_root}/Apache'
+    modules:
+      - apache
+    parser:
+      name: DefaultLogParser
+      params:
+        pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
+    handlers:
+      - name: TypeLogHandler
+        params:
+          definitions:
+            - field: time
+              format: '%a %b %d %H:%M:%S %Y'
+              type: datetime
+loggers:
+  - name: apache
+    path: '{loghub_root}/Apache'
+    modules:
+      - apache
+    template: apache
+
+we define template under ``templates`` section, and then can be referenced in loggers with template name.
+
+
+.. _dl_template_repo:
 
 template repo
 ^^^^^^^^^^^^^^^^^^
 
+besides :ref:`templates config<_dl_template_config>`, templates can also be defined in template repo. we can define all templates under ``templates`` folder under ``config root``.
+see following apache template for example, you can find full example `here`_:
 
+.. __: https://github.com/linewx/deep-log/tree/master/samples/template-repo
 
+.. code-block:: yaml
 
+name: apache
+path: '{loghub_root}/Apache'
+modules:
+  - apache
+parser:
+  name: DefaultLogParser
+  params:
+    pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
+handlers:
+  - name: TypeLogHandler
+    params:
+      definitions:
+        - field: time
+          format: '%a %b %d %H:%M:%S %Y'
+          type: datetime
+
+the above example define apache log template, which can be referenced in loggers.
 
 .. _dl_dsl:
 
@@ -336,7 +415,7 @@ Dsl Expressions
 ---------------
 dsl expression in DeepLog in a python expression for different usage with different context, there are four usages in general:
 
-* ``filter``, is used to filter log content, which can be ``--filter`` option value, or filter params in :ref:`DslFilter` definitions. :ref:`record_object` and :ref:`_module_object` are included in context.
+* ``filter``, is used to filter log content, which can be ``--filter`` option value, or filter params in :ref:`dsl_filter` definitions. :ref:`record_object` and :ref:`_module_object` are included in context.
 
 * ``handler``, is advanced usage in :ref:`TransformLogHandler`, both :ref:`record_object` and :ref:`_module_object` are included in context.
 
@@ -419,10 +498,6 @@ modules                             description
 : __re_module: https://docs.python.org/3/library/re.html
 : __path_module: https://docs.python.org/3/library/os.path.html
 : __datetime_module: https://docs.python.org/3/library/datetime.html
-
-
-
-
 
 
 
