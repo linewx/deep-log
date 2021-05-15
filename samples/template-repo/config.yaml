@@ -1,15 +1,22 @@
+variables:
+  loghub_root: /tmp/loghub
 root:
   parser:
     name: DefaultLogParser
     params:
-      pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
-  handlers:
-  - name: TypeLogHandler
-    params:
-      definitions:
-        - field: time
-          format: '%a %b %d %H:%M:%S %Y'
-          type: datetime    
+      pattern: (?P<content>.*?)
   path: /
 loggers:
-  
+  - name: apache
+    path: '{loghub_root}/Apache'
+    modules:
+      - apache
+    template: apache
+  - name: proxifier
+    path: '{loghub_root}/Proxifier'
+    modules:
+      - proxifier
+    template: proxifier
+
+
+

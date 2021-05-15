@@ -10,16 +10,62 @@ in general, config file is a yaml file named ``config.yaml`` under config root `
 **example**
 this is what config file look like:
 
+.. code-block:: yaml
+    root:
+        parser:
+
+components
+^^^^^^^^^^^
+
+* ``loggers``, logger definitions, the attributes is exactly the same as root. following attributes can be used in this component:
+    =================================   =============================================
+    modules                             description
+    =================================   =============================================
+    :ref:`path<dl_logger_path>`          where the logger used, always '/' for root
+    :ref:`parser<dl_parser>`             define how to parse the log item
+    :ref:`handlers<dl_handlers>`         define how to handle the parsed log items
+    :ref:`filters<dl_filters>`           define how to filter parsed log items
+    :ref:`template<dl_templates>`        define which template to refer
+    =================================   =============================================
+
+* ``root``, root is specific logger which define the default logger action, it will be matched if no any other loggers matched.
+* ``variables``, define variables which can be used in logger definitions.
+* ``templates``, define templates which can be reused in loggers. see :ref:`templates<dl_templates>` for detail.
 
 
+.. _dl_logger_path:
 
+logger path hierarchy
+^^^^^^^^^^^^^^^^^
+logger hierarchy is very like file system structure with inheritance. take following as an example:
 
-.. _dl_parser:
+.. code-block:: text
+    /tmp/loghub
+    ├── /tmp/loghub/Apache
+    │  └── /tmp/loghub/Apache/Apache_2k.log
+    ├── /tmp/loghub/Proxifier
+    │  └── /tmp/loghub/Proxifier/Proxifier_2k.log
+    ├── /tmp/loghub/Spark
+    │  └── /tmp/loghub/Spark/Spark_2k.log
+    └── /tmp/loghub/templates
+
+and there three loggers and root defined:
+    * ``apache``, with path **/tmp/loghub/Apache/**
+    * ``proxifier``, with path **/tmp/loghub/Proxifier/**
+    * ``loghub`` with path **/tmp/loghub/**
+
+when analyzing logs:
+    * if target logs under folder /tmp/loghub/Apache/ , DeepLog will match ``apache`` logger definition, and will parse logs as apache log.
+    * if target logs under folder /tmp/loghub/Proxifier/ , DeepLog will match ``proxifier`` logger definition, and will parse logs as apache log.
+    * if target logs under folder /tmp/loghub/Spark/ , there is no specific loggers defined for Spark log, DeepLog will try to match its parent node, in this case, `loghub` logger will be used.
+    * if target logs under folder /opt/, there is no any logger matching the path, the default ``root`` logger will be used.
+
+.. _dl_command:
 
 Command line Options
 ---------------------
 
-* ``-c``, ``--config`` config dir
+* ``-c``, ``--config`` config root dir
 * ``-l``, ``--filter`` log filter
 * ``-t``, ``--meta-filter`` filter by meta object extracted from file meta information
 * ``-n``, ``--file-name`` filter by file name
@@ -45,6 +91,7 @@ Command line Options
 * ``--target`` log dirs to analyze
 * ``pattern`` default string pattern to match
 
+.. _dl_parser:
 
 Parser
 --------------
@@ -270,6 +317,15 @@ DslMetaFilter is a more powerful filer than name filer, which can use python exp
 Template System
 --------------
 logs with the same type always have the same log format. to parse/handle/filter log with the same patterns, user can define those configurations as template.which can be shared by multiple loggers or command line.
+there are two ways to define templates:
+
+templates in config
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+template repo
+^^^^^^^^^^^^^^^^^^
+
 
 
 

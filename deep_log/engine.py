@@ -45,6 +45,8 @@ class LogEngine:
             for one in self.log_miner.get_target_files(self.targets, self.modules):
                 print(one)
 
+            return
+
         total_counter = 0
         batch_counter = 0
         existing_records = set()

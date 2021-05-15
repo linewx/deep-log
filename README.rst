@@ -67,13 +67,18 @@ Documentation
 the official documentation is hosted in https://deep-log.readthedocs.io/en/latest/
 
 
-Further Steps:
-* index engine to speed up query operation
+Further Steps
+---------------------
+
+* add index engine to accelerate query efficiency
 * integrate plot functionalities
-* rule-based analysis template engine to help user identify issues more effectively, bundled with existing template system.
-* distributed log collections
-* matching learning integration
+* enhance analysis engine by introducing decision engine
+* rule-based analysis template engine
+* package management to deliver bundled ETL && Analysis
+* machine learning integration
 * support more data sources
+* distributed log collections
+
 
 
 

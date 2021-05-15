@@ -70,7 +70,7 @@ class StripLogHandler(LogHandler):
         self.fields = fields
 
     def handle(self, one_log_item):
-        if self.field is None:
+        if self.fields is None:
             return {key: (value.strip() if isinstance(value, str) else value) for key, value in one_log_item.items()}
         else:
             return {key: (value.strip() if key in self.fields and isinstance(value, str) else value) for key, value in

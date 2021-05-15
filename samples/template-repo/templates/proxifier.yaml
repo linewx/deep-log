@@ -1,0 +1,15 @@
+name: proxifier
+path: '{loghub_root}/Proxifier'
+modules:
+  - proxifier
+parser:
+  name: DefaultLogParser
+  params:
+  pattern: \[(?P<time>.*?)\] (?P<process>[^\ ]+) - (?P<message>.*)
+handlers:
+  - name: TypeLogHandler
+    params:
+    definitions:
+      - field: time
+    format: '%m.%d %H:%M:%S'
+    type: datetime
