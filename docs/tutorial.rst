@@ -488,18 +488,18 @@ Built-in Modules
 -------------------
 there are kinds of python modules exposed which can be invoked in dsl Expressions:
 
-=================================   =============================================
-modules                             description
-=================================   =============================================
-`re<re_module>`_                     Regular expression operations
-`path<path_module>`_                 Common pathname manipulations
-`datetime<datetime_module>`_         Basic date and time types
-=================================   =============================================
+    =================================   =============================================
+    modules                             description
+    =================================   =============================================
+    `re`_                                Regular expression operations
+    `path`_                              Common pathname manipulations
+    `datetime`_                          Basic date and time types
+    =================================   =============================================
 
 
-: _re_module: https://docs.python.org/3/library/re.html
-: _path_module: https://docs.python.org/3/library/os.path.html
-: _datetime_module: https://docs.python.org/3/library/datetime.html
+: _re: https://docs.python.org/3/library/re.html
+: _path: https://docs.python.org/3/library/os.path.html
+: _datetime: https://docs.python.org/3/library/datetime.html
 
 
 
