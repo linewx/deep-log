@@ -12,30 +12,30 @@ this is what config file look like:
 
 .. code-block:: yaml
 
-variables:
-  loghub_root: /tmp/loghub
-root:
-  parser:
-    name: DefaultLogParser
-    params:
-      pattern: (?P<content>.*?)
-  path: /
-loggers:
-  - name: apache
-    path: '{loghub_root}/Apache'
-    modules:
-      - apache
-    parser:
-      name: DefaultLogParser
-      params:
-        pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
-    handlers:
-      - name: TypeLogHandler
+    variables:
+      loghub_root: /tmp/loghub
+    root:
+      parser:
+        name: DefaultLogParser
         params:
-          definitions:
-            - field: time
-              format: '%a %b %d %H:%M:%S %Y'
-              type: datetime
+          pattern: (?P<content>.*?)
+      path: /
+    loggers:
+      - name: apache
+        path: '{loghub_root}/Apache'
+        modules:
+          - apache
+        parser:
+          name: DefaultLogParser
+          params:
+            pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
+        handlers:
+          - name: TypeLogHandler
+            params:
+              definitions:
+                - field: time
+                  format: '%a %b %d %H:%M:%S %Y'
+                  type: datetime
 
 
 components
@@ -125,7 +125,7 @@ parser is used to parse log line from string to structured data. in DeepLog, cur
 DefaultLogParser
 ^^^^^^^^^^^^^^^^
 
-DefaultLogParser use `python regular expression named groups`__ to parse log line as a object. with following attributes:
+DefaultLogParser use `python regular expression named groups`_ to parse log line as a object. with following attributes:
 
 .. __: https://docs.python.org/3/library/re.html
 
