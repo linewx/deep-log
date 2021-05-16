@@ -167,7 +167,7 @@ the type of value in parsed object from parser is always string, TypeLogHandler 
 * **definitions**, define a serial of type definitions, one type definition has three sub fields:
     + field, the field name which will be transferred.
     + type, the type to transfer.
-    + format, only used when type is datetime, which define the string `time format`_ used by strftime function.
+    + format, only used when type is datetime, which define the string `time format`__ used by strftime function.
 
 .. __: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior
 
@@ -383,31 +383,31 @@ we define template under ``templates`` section, and then can be referenced in lo
 
 .. _dl_template_repo:
 
-template repo
+Template Repo
 ^^^^^^^^^^^^^^^^^^
 
 besides :ref:`templates config<_dl_template_config>`, templates can also be defined in template repo. we can define all templates under ``templates`` folder under ``config root``.
-see following apache template for example, you can find full example `here`_:
+see following apache template for example, you can find full example `here`__:
 
 .. __: https://github.com/linewx/deep-log/tree/master/samples/template-repo
 
 .. code-block:: yaml
 
-name: apache
-path: '{loghub_root}/Apache'
-modules:
-  - apache
-parser:
-  name: DefaultLogParser
-  params:
-    pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
-handlers:
-  - name: TypeLogHandler
-    params:
-      definitions:
-        - field: time
-          format: '%a %b %d %H:%M:%S %Y'
-          type: datetime
+    name: apache
+    path: '{loghub_root}/Apache'
+    modules:
+      - apache
+    parser:
+      name: DefaultLogParser
+      params:
+        pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
+    handlers:
+      - name: TypeLogHandler
+        params:
+          definitions:
+            - field: time
+              format: '%a %b %d %H:%M:%S %Y'
+              type: datetime
 
 the above example define apache log template, which can be referenced in loggers.
 
@@ -491,15 +491,15 @@ there are kinds of python modules exposed which can be invoked in dsl Expression
 =================================   =============================================
 modules                             description
 =================================   =============================================
-:ref:`re<re_module>`                Regular expression operations
-:ref:`path<path_module>`            Common pathname manipulations
-:ref:`datetime<datetime_module>`    Basic date and time types
+`re<re_module>`_                     Regular expression operations
+`path<path_module>`_                 Common pathname manipulations
+`datetime<datetime_module>`_         Basic date and time types
 =================================   =============================================
 
 
-: __re_module: https://docs.python.org/3/library/re.html
-: __path_module: https://docs.python.org/3/library/os.path.html
-: __datetime_module: https://docs.python.org/3/library/datetime.html
+: _re_module: https://docs.python.org/3/library/re.html
+: _path_module: https://docs.python.org/3/library/os.path.html
+: _datetime_module: https://docs.python.org/3/library/datetime.html
 
 
 
