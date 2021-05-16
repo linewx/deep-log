@@ -351,7 +351,7 @@ DslMetaFilter is a more powerful filer than name filer, which can use python exp
           filter: _size > 0
 
 
-    the above means all empty files will be ignored
+the above means all empty files will be ignored
 
 
 .. _dl_templates:
