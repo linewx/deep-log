@@ -125,7 +125,7 @@ parser is used to parse log line from string to structured data. in DeepLog, cur
 DefaultLogParser
 ^^^^^^^^^^^^^^^^
 
-DefaultLogParser use `python regular expression named groups`_ to parse log line as a object. with following attributes:
+DefaultLogParser use `python regular expression named groups`__ to parse log line as a object. with following attributes:
 
 .. __: https://docs.python.org/3/library/re.html
 
@@ -167,7 +167,7 @@ the type of value in parsed object from parser is always string, TypeLogHandler 
 * **definitions**, define a serial of type definitions, one type definition has three sub fields:
     + field, the field name which will be transferred.
     + type, the type to transfer.
-    + format, only used when type is datetime, which define the string `time format`__ used by strftime function.
+    + format, only used when type is datetime, which define the string `time format`_ used by strftime function.
 
 .. __: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior
 
@@ -298,7 +298,9 @@ metaFilters basically is used to filter by log file meta info not log file conte
 
 NameFilter
 ^^^^^^^^^^
-NameFilter is used to filter file name based on `Unix filename pattern matching`__ syntax. which take two arguments:
+NameFilter is used to filter file name based on `Unix filename pattern matching`_ syntax. which take two arguments:
+
+.. _Unix filename pattern matching:  https://docs.python.org/3/library/fnmatch.html
 
 * ``patterns``, define the file name match patterns, which split by comma ``,``.
 * ``exclude_patterns``, define excluded file name match patterns, which split by comma ``,``.
@@ -349,32 +351,32 @@ templates in config
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 templates can be defined directly in `config.yaml`_, see following snippet:
 
-.. __: https://raw.githubusercontent.com/linewx/deep-log/master/samples/template/config.yaml
+.. _config.yaml: https://raw.githubusercontent.com/linewx/deep-log/master/samples/template/config.yaml
 
 .. code-block:: yaml
 
-templates:
-  - name: apache
-    path: '{loghub_root}/Apache'
-    modules:
-      - apache
-    parser:
-      name: DefaultLogParser
-      params:
-        pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
-    handlers:
-      - name: TypeLogHandler
-        params:
-          definitions:
-            - field: time
-              format: '%a %b %d %H:%M:%S %Y'
-              type: datetime
-loggers:
-  - name: apache
-    path: '{loghub_root}/Apache'
-    modules:
-      - apache
-    template: apache
+    templates:
+      - name: apache
+        path: '{loghub_root}/Apache'
+        modules:
+          - apache
+        parser:
+          name: DefaultLogParser
+          params:
+            pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
+        handlers:
+          - name: TypeLogHandler
+            params:
+              definitions:
+                - field: time
+                  format: '%a %b %d %H:%M:%S %Y'
+                  type: datetime
+    loggers:
+      - name: apache
+        path: '{loghub_root}/Apache'
+        modules:
+          - apache
+        template: apache
 
 we define template under ``templates`` section, and then can be referenced in loggers with template name.
 
