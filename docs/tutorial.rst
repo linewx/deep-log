@@ -74,9 +74,9 @@ logger hierarchy is very like file system structure with inheritance. take follo
     └── /tmp/loghub/templates
 
 and there three loggers and root defined:
-    * ``apache``, with path **/tmp/loghub/Apache/**
-    * ``proxifier``, with path **/tmp/loghub/Proxifier/**
-    * ``loghub`` with path **/tmp/loghub/**
+    * ``apache``, with path */tmp/loghub/Apache/*
+    * ``proxifier``, with path */tmp/loghub/Proxifier/*
+    * ``loghub`` with path */tmp/loghub/*
 
 when analyzing logs:
     * if target logs under folder /tmp/loghub/Apache/ , DeepLog will match ``apache`` logger definition, and will parse logs as apache log.
@@ -141,7 +141,7 @@ the log line::
 
 with parser config
 
-.. code-block::yaml
+.. code-block:: yaml
 
   parser:
     name: DefaultLogParser
@@ -150,7 +150,7 @@ with parser config
 
 the parsed result will be
 
-.. code-block::json
+.. code-block:: json
     {
         'time': 'Sun Dec 04 04:52:15 2005',
         'level': 'error',
@@ -183,7 +183,7 @@ the type of value in parsed object from parser is always string, TypeLogHandler 
 
 with above parser, we have parsed result
 
-.. code-block::json
+.. code-block:: json
 
     {
         'time': 'Sun Dec 04 04:52:15 2005',
@@ -474,7 +474,7 @@ built-in properties
 ^^^^^^^^^^^^^^^^^^^^
 * :ref:`meta_object`
 * ``_record``, file line
-* `df`, log items data frame
+* ``df``, log items data frame
 
 .. note::
     property ``df`` can only be invoked in analysis function.
@@ -488,9 +488,9 @@ user-defined items
 
 **examples**
 
-following is the examples returned by DeepLog.
+following is the examples returned by DeepLog:
 
-.. code-block::json
+.. code-block:: json
 
     {
         '_name': '/tmp/apache_v2.log' # meta object property, filename
