@@ -141,14 +141,21 @@ the log line::
 
 with parser config
 
-.. code-block:: yaml
+.. code-block::yaml
 
   parser:
     name: DefaultLogParser
     params:
       pattern: \[(?P<time>.*?)\] \[(?P<level>.*?)\] (?P<message>.*)
 
-the parsed result will be *{'time': 'Sun Dec 04 04:52:15 2005', 'level': 'error', 'message': 'mod_jk child workerEnv in error state 7'}*
+the parsed result will be
+
+.. code-block::json
+    {
+        'time': 'Sun Dec 04 04:52:15 2005',
+        'level': 'error',
+        'message': 'mod_jk child workerEnv in error state 7'
+    }
 
 
 .. _dl_handlers:
@@ -174,7 +181,15 @@ the type of value in parsed object from parser is always string, TypeLogHandler 
 
 **examples**:
 
-with above parser, we have parsed result *{'time': 'Sun Dec 04 04:52:15 2005', 'level': 'error', 'message': 'mod_jk child workerEnv in error state 7'}*
+with above parser, we have parsed result
+
+.. code-block::json
+
+    {
+        'time': 'Sun Dec 04 04:52:15 2005',
+        'level': 'error',
+        'message': 'mod_jk child workerEnv in error state 7'
+    }
 
 
 with handler configuration:
@@ -190,7 +205,7 @@ with handler configuration:
           type: datetime
   path: /
 
-the above handler will transfer the field *time* in parsed result to datetime object with format *%a %b %d %H:%M:%S %Y*, the result will be {'time': Datetime.Datetime(2005, 12, 4, 4, 52, 15), ...}
+the above handler will transfer the field *time* in parsed result to datetime object with format ``%a %b %d %H:%M:%S %Y``, the result will be ``{'time': Datetime.Datetime(2005, 12, 4, 4, 52, 15), ...}``
 
 
 TagLogHandler
@@ -264,11 +279,12 @@ TransformLogHandler use dsl expression to transform record object with new field
 **examples**
 
 .. code-block:: yaml
-handlers:
-  - name: TransformLogHandler
-    params:
-      name: is_today
-      value: "time.date() == datetime.datetime.today().date()"
+
+    handlers:
+      - name: TransformLogHandler
+        params:
+          name: is_today
+          value: "time.date() == datetime.datetime.today().date()"
 
 
 the above show using TransformLogHandler to create new field to identify the log date is today or not.
@@ -309,11 +325,11 @@ NameFilter is used to filter file name based on `Unix filename pattern matching`
 
 .. code-block:: yaml
 
-meta_filters:
-  - name: NameFilter
-    params:
-      patterns: '*.log'
-      exclude_patterns: '*audit.log'
+    meta_filters:
+      - name: NameFilter
+        params:
+          patterns: '*.log'
+          exclude_patterns: '*audit.log'
 
 
 the above means we analyze all the files with extetion name is .log but exclude audit log.
@@ -456,9 +472,9 @@ Record Object
 
 built-in properties
 ^^^^^^^^^^^^^^^^^^^^
-* *all meta object*
-* *_record*, file line
-& *df*, log items data frame
+* :ref:`meta_object`
+* ``_record``, file line
+* `df`, log items data frame
 
 .. note::
     property ``df`` can only be invoked in analysis function.
@@ -474,7 +490,7 @@ user-defined items
 
 following is the examples returned by DeepLog.
 
-.. code-block:: json
+.. code-block::json
 
     {
         '_name': '/tmp/apache_v2.log' # meta object property, filename
