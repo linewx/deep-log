@@ -96,11 +96,17 @@ class TemplateRepo:
             return
 
         for one in os.listdir(template_dir):
+            if not one.endswith('yaml'):
+                continue
+
             template_file = os.path.join(template_dir, one)
             with open(template_file) as f:
-                one_template = yaml.safe_load(f)
-                if 'name' in one_template:
-                    self.template_repo[one_template.get('name')] = one_template
+                try:
+                    one_template = yaml.safe_load(f)
+                    if 'name' in one_template:
+                        self.template_repo[one_template.get('name')] = one_template
+                except Exception as e:
+                    logging.error(e)
 
     def get_template(self, template_name):
         return self.template_repo.get(template_name)
