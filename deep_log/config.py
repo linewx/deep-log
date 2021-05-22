@@ -210,7 +210,7 @@ class LogConfig:
             settings.get('variables').update(variables)
 
         # populate variables
-        settings.get('variables').update(utils.evaluate_variables(variables, depth=5))
+        settings.get('variables').update(utils.evaluate_variables(settings.get('variables'), depth=5))
 
     def populate_paths(self, settings):
         # populate loggers paths

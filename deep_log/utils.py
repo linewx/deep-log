@@ -25,7 +25,7 @@ def evaluate_variable(variable, variables, depth=5):
 def evaluate_variables(variables, depth=5):
     results = {}
     for key, value in variables.items():
-        results[key] = evaluate_variable(key, variables, depth)
+        results[key] = evaluate_variable(value, variables, depth)
 
     return results
 
